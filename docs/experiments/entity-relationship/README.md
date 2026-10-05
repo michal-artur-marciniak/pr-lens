@@ -13,4 +13,13 @@ node packages/cli/dist/bin.js diagram docs/experiments/entity-relationship/cardi
 
 Omit `--scenario` for a static SVG. Embed the exported file with `![Schema](path.svg)`. Input is native PR Lens JSON, with no Mermaid syntax, parser or runtime.
 
-The experiment supports two to eight entities, 24 fields per entity and 32 relations. Entities occupy columns in input order; large schemas will need a different layout. Adjacent relations use the gap between tables; distant relations route below tables. Dense overlapping relations are not optimized. Self relations are rejected. Animations use SVG only; reduced motion hides focus rings. The renderer does not infer cardinality from key markers or compute migrations from a database.
+The experiment supports two to eight entities, 24 fields per entity and 32 relations. Two entities occupy columns in input order. Three or more stack vertically, with relationship corridors beside the tables. In the two-column layout, adjacent relations use the gap between tables. Dense overlapping relations are not optimized. Self relations are rejected. Animations use SVG only; reduced motion hides focus rings. The renderer does not infer cardinality from key markers or compute migrations from a database.
+
+
+Playback highlights a field row or the exact relationship path for the current migration step. Related fields and relations can light up together. Focus fades between steps and disappears during the cycle pause; static delta badges remain visible.
+
+`invoices.diagram.json` adds a third entity and migrates invoice ownership from customers to orders. It shows two new foreign keys, a removed distant relation and a type change.
+
+```sh
+node packages/cli/dist/bin.js diagram docs/experiments/entity-relationship/invoices.diagram.json --scenario normalize-invoices --theme both
+```

@@ -1,0 +1,178 @@
+{
+  "schemaVersion": "0.3.0",
+  "kind": "diagram",
+  "title": "Move invoice ownership from customers to orders",
+  "summary": "Schema migration: customer relation replaces duplicated email.",
+  "diagram": {
+    "kind": "entity-relationship",
+    "entities": [
+      {
+        "id": "customers",
+        "label": "Customers",
+        "fields": [
+          {
+            "id": "customer-id",
+            "label": "id",
+            "type": "uuid",
+            "keys": [
+              "PK"
+            ]
+          },
+          {
+            "id": "email",
+            "label": "email",
+            "type": "varchar(255)"
+          }
+        ]
+      },
+      {
+        "id": "orders",
+        "label": "Orders",
+        "fields": [
+          {
+            "id": "order-id",
+            "label": "id",
+            "type": "uuid",
+            "keys": [
+              "PK"
+            ]
+          },
+          {
+            "id": "customer-fk",
+            "label": "customer_id",
+            "type": "uuid",
+            "keys": [
+              "FK"
+            ],
+            "delta": "added"
+          },
+          {
+            "id": "status",
+            "label": "status",
+            "type": "OrderStatus",
+            "delta": "added"
+          }
+        ]
+      },
+      {
+        "id": "invoices",
+        "label": "Invoices",
+        "fields": [
+          {
+            "id": "invoice-id",
+            "label": "id",
+            "type": "uuid",
+            "keys": [
+              "PK"
+            ]
+          },
+          {
+            "id": "invoice-order",
+            "label": "order_id",
+            "type": "uuid",
+            "keys": [
+              "FK"
+            ],
+            "delta": "added"
+          },
+          {
+            "id": "invoice-customer",
+            "label": "customer_id",
+            "type": "uuid",
+            "keys": [
+              "FK"
+            ],
+            "delta": "removed"
+          },
+          {
+            "id": "invoice-total",
+            "label": "total",
+            "type": "decimal(18,2)",
+            "delta": "modified",
+            "previous": {
+              "type": "int32"
+            }
+          }
+        ]
+      }
+    ],
+    "relations": [
+      {
+        "id": "customer-orders",
+        "from": {
+          "entity": "customers",
+          "field": "customer-id",
+          "cardinality": "one"
+        },
+        "to": {
+          "entity": "orders",
+          "field": "customer-fk",
+          "cardinality": "zero-or-many"
+        },
+        "label": "places",
+        "delta": "added"
+      },
+      {
+        "id": "order-invoice",
+        "from": {
+          "entity": "orders",
+          "field": "order-id",
+          "cardinality": "one"
+        },
+        "to": {
+          "entity": "invoices",
+          "field": "invoice-order",
+          "cardinality": "zero-or-one"
+        },
+        "label": "invoiced",
+        "delta": "added"
+      },
+      {
+        "id": "legacy-invoice",
+        "from": {
+          "entity": "customers",
+          "field": "customer-id",
+          "cardinality": "one"
+        },
+        "to": {
+          "entity": "invoices",
+          "field": "invoice-customer",
+          "cardinality": "zero-or-many"
+        },
+        "label": "legacy",
+        "delta": "removed"
+      }
+    ],
+    "scenarios": [
+      {
+        "id": "normalize-invoices",
+        "label": "Introduce order ownership and retire the legacy link",
+        "steps": [
+          {
+            "elements": [
+              "customer-fk",
+              "customer-orders"
+            ]
+          },
+          {
+            "elements": [
+              "invoice-order",
+              "order-invoice"
+            ]
+          },
+          {
+            "elements": [
+              "invoice-total"
+            ]
+          },
+          {
+            "elements": [
+              "invoice-customer",
+              "legacy-invoice"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
