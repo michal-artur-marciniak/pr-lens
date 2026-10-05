@@ -6,6 +6,7 @@ The experiment adds native visual families:
 
 - [Flowcharts](flowchart/README.md): shapes, groups, decisions, back edges and explicit scenario paths.
 - [Sequences](sequence/README.md): lifelines, messages, choices, repeats and parallel branches with a shared clock.
+- [Gantt](gantt/README.md): task duration, milestones, dependencies and schedule playback.
 - [States](state/README.md): lifecycle transitions, guards, initial/final states and selected paths.
 - [Entity relationships](entity-relationship/README.md): typed fields, keys, cardinality and narrated schema changes.
 

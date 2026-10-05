@@ -6,6 +6,7 @@ import { svgDocument } from "./svg/document.js";
 import { diagramText } from "./svg/diagram-primitives.js";
 import { paintEntityRelationship } from "./svg/entity-relationship.js";
 import { paintSequence } from "./svg/sequence.js";
+import { paintGantt } from "./svg/gantt.js";
 import { paintState } from "./svg/state.js";
 import { paintFlowchart } from "./svg/flowchart.js";
 
@@ -28,6 +29,7 @@ export const renderDiagram = (doc: DiagramDoc, options: DiagramRenderOptions): D
   const palette = paletteFor(options.theme);
   const painted = (() => {
     switch (doc.diagram.kind) {
+      case "gantt": return paintGantt(doc.diagram, palette, scenario !== undefined);
       case "state": return paintState(doc.diagram, palette, doc.diagram.scenarios.find((item) => item.id === scenario?.id)?.path);
       case "flowchart": return paintFlowchart(doc.diagram, palette, doc.diagram.scenarios.find((item) => item.id === scenario?.id)?.path);
       case "sequence": return paintSequence(doc.diagram, palette, doc.diagram.scenarios.find((item) => item.id === scenario?.id));
