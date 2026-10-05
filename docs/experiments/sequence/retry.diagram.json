@@ -1,0 +1,145 @@
+{
+  "schemaVersion": "0.2.0",
+  "kind": "diagram",
+  "title": "Timeout and retry",
+  "summary": "The same request succeeds immediately or after two timeouts.",
+  "diagram": {
+    "kind": "sequence",
+    "participants": [
+      {
+        "id": "client",
+        "label": "Client"
+      },
+      {
+        "id": "api",
+        "label": "API"
+      },
+      {
+        "id": "service",
+        "label": "Remote service"
+      }
+    ],
+    "messages": [
+      {
+        "id": "request",
+        "from": "client",
+        "to": "api",
+        "label": "GET /report",
+        "kind": "sync"
+      },
+      {
+        "id": "attempt",
+        "from": "api",
+        "to": "service",
+        "label": "Fetch report",
+        "kind": "sync"
+      },
+      {
+        "id": "timeout",
+        "from": "service",
+        "to": "api",
+        "label": "Timeout",
+        "kind": "return"
+      },
+      {
+        "id": "success",
+        "from": "service",
+        "to": "api",
+        "label": "Report ready",
+        "kind": "return"
+      },
+      {
+        "id": "response",
+        "from": "api",
+        "to": "client",
+        "label": "200 / report",
+        "kind": "return"
+      }
+    ],
+    "steps": [
+      {
+        "id": "step-request",
+        "kind": "message",
+        "message": "request"
+      },
+      {
+        "id": "attempts",
+        "kind": "repeat",
+        "label": "Request attempts",
+        "steps": [
+          {
+            "id": "step-attempt",
+            "kind": "message",
+            "message": "attempt"
+          },
+          {
+            "id": "result",
+            "kind": "choice",
+            "label": "Attempt result",
+            "branches": [
+              {
+                "id": "timed-out",
+                "label": "Timeout",
+                "steps": [
+                  {
+                    "id": "step-timeout",
+                    "kind": "message",
+                    "message": "timeout"
+                  }
+                ]
+              },
+              {
+                "id": "ready",
+                "label": "Success",
+                "steps": [
+                  {
+                    "id": "step-success",
+                    "kind": "message",
+                    "message": "success"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "step-response",
+        "kind": "message",
+        "message": "response"
+      }
+    ],
+    "scenarios": [
+      {
+        "id": "fast-success",
+        "label": "Success on the first attempt",
+        "choices": {
+          "result": [
+            "ready"
+          ]
+        },
+        "iterations": {
+          "attempts": [
+            1
+          ]
+        }
+      },
+      {
+        "id": "retry-success",
+        "label": "Two timeouts, then success on attempt 3",
+        "choices": {
+          "result": [
+            "timed-out",
+            "timed-out",
+            "ready"
+          ]
+        },
+        "iterations": {
+          "attempts": [
+            3
+          ]
+        }
+      }
+    ]
+  }
+}

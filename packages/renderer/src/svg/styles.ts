@@ -10,6 +10,7 @@ export const stylesFor = (palette: Palette) => ({
   lane: { fill: palette.lane },
   laneLabel: { "font-size": 10, "font-weight": 700, "letter-spacing": ".12em", fill: palette.muted },
   heading: { "font-size": 16, "font-weight": 600, fill: palette.foreground },
+  activeCaption: { "font-size": 11, "font-weight": 600, fill: palette.selection },
   caption: { "font-size": 11, fill: palette.muted },
   title: { "font-weight": 600, fill: palette.foreground },
   subtitle: { "font-size": 9.5, fill: palette.muted, "font-family": MONO_STACK },
@@ -17,6 +18,7 @@ export const stylesFor = (palette: Palette) => ({
   glyph: { fill: palette.muted },
   glyphStroke: { stroke: palette.muted, "stroke-width": 1.4, fill: "none" },
   badgeText: { "font-size": 8.5, "font-weight": 700, "letter-spacing": ".06em" },
+  focus: { fill: "none", stroke: palette.selection, "stroke-width": 2 },
   glow: { fill: "none", "stroke-width": 7, opacity: 0.14 },
   pill: { fill: palette.pill, stroke: palette.pillBorder, "stroke-width": 1 },
   pillText: { "font-size": 9.5, "font-weight": 600 },
@@ -107,7 +109,7 @@ export const edgeAttributes = (edge: GraphEdge, palette: Palette): Attributes =>
   }
 };
 
-export const messageAttributes = (message: FlowMessage, palette: Palette): Attributes => {
+export const messageAttributes = (message: Pick<FlowMessage, "delta" | "kind">, palette: Palette): Attributes => {
   const attributes = {
     ...connectionAttributes(message.delta, palette),
     "stroke-width": message.delta === "added" ? 2.25 : 1.5,

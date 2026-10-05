@@ -7,7 +7,7 @@
   "properties": {
     "schemaVersion": {
       "type": "string",
-      "const": "0.1.0"
+      "pattern": "^0\\.[12]\\.\\d+$"
     },
     "kind": {
       "type": "string",
@@ -26,206 +26,410 @@
       "description": "One or two sentences of plain prose. No markdown headings."
     },
     "diagram": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string",
-          "const": "flowchart"
-        },
-        "direction": {
-          "default": "down",
-          "type": "string",
-          "enum": [
-            "down",
-            "right"
-          ]
-        },
-        "nodes": {
-          "minItems": 1,
-          "maxItems": 64,
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 128,
-                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
-                "description": "Stable identifier, unique within its collection in a document."
-              },
-              "kind": {
-                "type": "string",
-                "enum": [
-                  "start",
-                  "end",
-                  "process",
-                  "decision",
-                  "datastore"
-                ]
-              },
-              "label": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 120,
-                "description": "Short display label."
-              },
-              "delta": {
-                "default": "unchanged",
-                "type": "string",
-                "enum": [
-                  "added",
-                  "modified",
-                  "removed",
-                  "unchanged"
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "flowchart"
+            },
+            "direction": {
+              "default": "down",
+              "type": "string",
+              "enum": [
+                "down",
+                "right"
+              ]
+            },
+            "nodes": {
+              "minItems": 1,
+              "maxItems": 64,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                    "description": "Stable identifier, unique within its collection in a document."
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "start",
+                      "end",
+                      "process",
+                      "decision",
+                      "datastore"
+                    ]
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "description": "Short display label."
+                  },
+                  "delta": {
+                    "default": "unchanged",
+                    "type": "string",
+                    "enum": [
+                      "added",
+                      "modified",
+                      "removed",
+                      "unchanged"
+                    ],
+                    "description": "Change state relative to the base commit."
+                  },
+                  "group": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                    "description": "Stable identifier, unique within its collection in a document."
+                  }
+                },
+                "required": [
+                  "id",
+                  "kind",
+                  "label"
                 ],
-                "description": "Change state relative to the base commit."
-              },
-              "group": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 128,
-                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
-                "description": "Stable identifier, unique within its collection in a document."
+                "additionalProperties": false
               }
             },
-            "required": [
-              "id",
-              "kind",
-              "label"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "edges": {
-          "default": [],
-          "maxItems": 128,
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 128,
-                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
-                "description": "Stable identifier, unique within its collection in a document."
-              },
-              "from": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 128,
-                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
-                "description": "Stable identifier, unique within its collection in a document."
-              },
-              "to": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 128,
-                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
-                "description": "Stable identifier, unique within its collection in a document."
-              },
-              "label": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 120,
-                "description": "Short display label."
-              },
-              "delta": {
-                "default": "unchanged",
-                "type": "string",
-                "enum": [
-                  "added",
-                  "modified",
-                  "removed",
-                  "unchanged"
+            "edges": {
+              "default": [],
+              "maxItems": 128,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                    "description": "Stable identifier, unique within its collection in a document."
+                  },
+                  "from": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                    "description": "Stable identifier, unique within its collection in a document."
+                  },
+                  "to": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                    "description": "Stable identifier, unique within its collection in a document."
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "description": "Short display label."
+                  },
+                  "delta": {
+                    "default": "unchanged",
+                    "type": "string",
+                    "enum": [
+                      "added",
+                      "modified",
+                      "removed",
+                      "unchanged"
+                    ],
+                    "description": "Change state relative to the base commit."
+                  }
+                },
+                "required": [
+                  "id",
+                  "from",
+                  "to"
                 ],
-                "description": "Change state relative to the base commit."
+                "additionalProperties": false
               }
             },
-            "required": [
-              "id",
-              "from",
-              "to"
-            ],
-            "additionalProperties": false
-          }
+            "groups": {
+              "default": [],
+              "maxItems": 16,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                    "description": "Stable identifier, unique within its collection in a document."
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "description": "Short display label."
+                  }
+                },
+                "required": [
+                  "id",
+                  "label"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "scenarios": {
+              "default": [],
+              "maxItems": 16,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                    "description": "Stable identifier, unique within its collection in a document."
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "description": "Short display label."
+                  },
+                  "path": {
+                    "minItems": 1,
+                    "maxItems": 256,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                      "description": "Stable identifier, unique within its collection in a document."
+                    }
+                  }
+                },
+                "required": [
+                  "id",
+                  "label",
+                  "path"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "nodes"
+          ],
+          "additionalProperties": false
         },
-        "groups": {
-          "default": [],
-          "maxItems": 16,
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 128,
-                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
-                "description": "Stable identifier, unique within its collection in a document."
-              },
-              "label": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 120,
-                "description": "Short display label."
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "sequence"
+            },
+            "participants": {
+              "minItems": 2,
+              "maxItems": 8,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                    "description": "Stable identifier, unique within its collection in a document."
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "description": "Short display label."
+                  },
+                  "delta": {
+                    "default": "unchanged",
+                    "type": "string",
+                    "enum": [
+                      "added",
+                      "modified",
+                      "removed",
+                      "unchanged"
+                    ],
+                    "description": "Change state relative to the base commit."
+                  }
+                },
+                "required": [
+                  "id",
+                  "label"
+                ],
+                "additionalProperties": false
               }
             },
-            "required": [
-              "id",
-              "label"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "scenarios": {
-          "default": [],
-          "maxItems": 16,
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 128,
-                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
-                "description": "Stable identifier, unique within its collection in a document."
-              },
-              "label": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 120,
-                "description": "Short display label."
-              },
-              "path": {
-                "minItems": 1,
-                "maxItems": 256,
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 128,
-                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
-                  "description": "Stable identifier, unique within its collection in a document."
-                }
+            "messages": {
+              "minItems": 1,
+              "maxItems": 64,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                    "description": "Stable identifier, unique within its collection in a document."
+                  },
+                  "from": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                    "description": "Stable identifier, unique within its collection in a document."
+                  },
+                  "to": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                    "description": "Stable identifier, unique within its collection in a document."
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "description": "Short display label."
+                  },
+                  "kind": {
+                    "default": "sync",
+                    "type": "string",
+                    "enum": [
+                      "sync",
+                      "async",
+                      "return",
+                      "self"
+                    ]
+                  },
+                  "delta": {
+                    "default": "unchanged",
+                    "type": "string",
+                    "enum": [
+                      "added",
+                      "modified",
+                      "removed",
+                      "unchanged"
+                    ],
+                    "description": "Change state relative to the base commit."
+                  }
+                },
+                "required": [
+                  "id",
+                  "from",
+                  "to",
+                  "label"
+                ],
+                "additionalProperties": false
               }
             },
-            "required": [
-              "id",
-              "label",
-              "path"
-            ],
-            "additionalProperties": false
-          }
+            "steps": {
+              "minItems": 1,
+              "maxItems": 64,
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SequenceStep"
+              }
+            },
+            "scenarios": {
+              "default": [],
+              "maxItems": 16,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                    "description": "Stable identifier, unique within its collection in a document."
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "description": "Short display label."
+                  },
+                  "choices": {
+                    "default": {},
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                      "description": "Stable identifier, unique within its collection in a document."
+                    },
+                    "additionalProperties": {
+                      "minItems": 1,
+                      "maxItems": 256,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128,
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                        "description": "Stable identifier, unique within its collection in a document."
+                      }
+                    }
+                  },
+                  "iterations": {
+                    "default": {},
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128,
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                      "description": "Stable identifier, unique within its collection in a document."
+                    },
+                    "additionalProperties": {
+                      "minItems": 1,
+                      "maxItems": 256,
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 8
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "id",
+                  "label"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "participants",
+            "messages",
+            "steps"
+          ],
+          "additionalProperties": false
         }
-      },
-      "required": [
-        "kind",
-        "nodes"
-      ],
-      "additionalProperties": false
+      ]
     }
   },
   "required": [
@@ -234,5 +438,209 @@
     "title",
     "diagram"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "$defs": {
+    "SequenceStep": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+              "description": "Stable identifier, unique within its collection in a document."
+            },
+            "kind": {
+              "type": "string",
+              "const": "message"
+            },
+            "message": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+              "description": "Stable identifier, unique within its collection in a document."
+            }
+          },
+          "required": [
+            "id",
+            "kind",
+            "message"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+              "description": "Stable identifier, unique within its collection in a document."
+            },
+            "kind": {
+              "type": "string",
+              "const": "choice"
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120,
+              "description": "Short display label."
+            },
+            "branches": {
+              "minItems": 2,
+              "maxItems": 8,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                    "description": "Stable identifier, unique within its collection in a document."
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "description": "Short display label."
+                  },
+                  "steps": {
+                    "minItems": 1,
+                    "maxItems": 64,
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/SequenceStep"
+                    }
+                  }
+                },
+                "required": [
+                  "id",
+                  "label",
+                  "steps"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "id",
+            "kind",
+            "label",
+            "branches"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+              "description": "Stable identifier, unique within its collection in a document."
+            },
+            "kind": {
+              "type": "string",
+              "const": "repeat"
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120,
+              "description": "Short display label."
+            },
+            "steps": {
+              "minItems": 1,
+              "maxItems": 64,
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SequenceStep"
+              }
+            }
+          },
+          "required": [
+            "id",
+            "kind",
+            "label",
+            "steps"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+              "description": "Stable identifier, unique within its collection in a document."
+            },
+            "kind": {
+              "type": "string",
+              "const": "parallel"
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120,
+              "description": "Short display label."
+            },
+            "branches": {
+              "minItems": 2,
+              "maxItems": 8,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                    "description": "Stable identifier, unique within its collection in a document."
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "description": "Short display label."
+                  },
+                  "steps": {
+                    "minItems": 1,
+                    "maxItems": 64,
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/SequenceStep"
+                    }
+                  }
+                },
+                "required": [
+                  "id",
+                  "label",
+                  "steps"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "id",
+            "kind",
+            "label",
+            "branches"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
 }

@@ -1,8 +1,10 @@
+import { assertNever } from "./utils.js";
+import { SequenceDiagram, sequenceIssues } from "./sequence-diagram.js";
 import { z } from "zod";
 import { Delta, Id, Label, Summary } from "./primitives.js";
 import { PrLensSchemaError, type Parsed, type SchemaIssue } from "./errors.js";
 
-export const DIAGRAM_SCHEMA_VERSION = "0.1.0" as const;
+export const DIAGRAM_SCHEMA_VERSION = "0.2.0" as const;
 
 export const DiagramNode = z.strictObject({
   id: Id,
@@ -28,11 +30,11 @@ export const FlowchartDiagram = z.strictObject({
 export type FlowchartDiagram = z.infer<typeof FlowchartDiagram>;
 
 export const DiagramDoc = z.strictObject({
-  schemaVersion: z.literal(DIAGRAM_SCHEMA_VERSION),
+  schemaVersion: z.string().regex(/^0\.[12]\.\d+$/, "unsupported experimental diagram version"),
   kind: z.literal("diagram"),
   title: Label,
   summary: Summary.optional(),
-  diagram: FlowchartDiagram,
+  diagram: z.discriminatedUnion("kind", [FlowchartDiagram, SequenceDiagram]),
 });
 export type DiagramDoc = z.infer<typeof DiagramDoc>;
 
@@ -85,7 +87,13 @@ export const safeParseDiagramDoc = (input: unknown): Parsed<DiagramDoc> => {
       }));
       return { ok: false, error: new PrLensSchemaError(issues[0]?.code ?? "INVALID_DOCUMENT", "invalid diagram document", issues) };
     }
-    const issues = flowchartIssues(parsed.data.diagram);
+    const issues = (() => {
+      switch (parsed.data.diagram.kind) {
+        case "flowchart": return flowchartIssues(parsed.data.diagram);
+        case "sequence": return sequenceIssues(parsed.data.diagram);
+        default: return assertNever(parsed.data.diagram);
+      }
+    })();
     if (issues.length > 0) return { ok: false, error: new PrLensSchemaError(issues[0]?.code ?? "INVALID_DOCUMENT", "invalid diagram document", issues) };
     return { ok: true, value: parsed.data };
   } catch (error) {
