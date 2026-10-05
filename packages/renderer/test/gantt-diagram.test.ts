@@ -10,6 +10,7 @@ it("uses duration-proportional bars and preserves geometry during playback", () 
   expect(animated.atlas.elements.integration?.width).toBe((animated.atlas.elements.unit?.width ?? 0) * 2);
   expect(animated.atlas.elements.integration?.x).toBe(animated.atlas.elements.unit?.x);
   expect(animated.svg).toContain('data-focus="time-cursor"');
+  expect(animated.svg).toContain('data-focus="progress-build" opacity="0"');
   expect(staticPicture.svg).not.toContain("<animateTransform");
   expect(animated.svg).toContain("NEW"); expect(animated.svg).toContain("CHANGED");
 });

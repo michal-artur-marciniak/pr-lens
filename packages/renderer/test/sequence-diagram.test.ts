@@ -40,7 +40,19 @@ it("lays out simultaneous calls in the same band and joins before the response",
 });
 it("does not attach inventory attempt counters to concurrent pricing messages", () => {
   const svg = renderDiagram(fixture("checkout"), { theme: "light", playback: { kind: "scenario", scenario: "checkout-retry" } }).svg;
-  expect(svg).toContain('data-focus="attempt-4-stock-attempts"');
-  expect(svg).not.toContain('data-focus="attempt-8-stock-attempts"');
-  expect(svg).not.toContain('data-focus="attempt-9-stock-attempts"');
+  expect(svg).toContain('data-focus="attempt-4"');
+  expect(svg).not.toContain('data-focus="attempt-8"');
+  expect(svg).not.toContain('data-focus="attempt-9"');
+});
+
+it("combines nested retry counters into one readable caption", () => {
+  const doc = parseDiagramDoc({ schemaVersion: "0.2.0", kind: "diagram", title: "Nested retry", diagram: {
+    kind: "sequence", participants: [{ id: "a", label: "Caller" }, { id: "b", label: "Service" }],
+    messages: [{ id: "call", from: "a", to: "b", label: "Try" }],
+    steps: [{ id: "outer", kind: "repeat", label: "Outer", steps: [{ id: "inner", kind: "repeat", label: "Inner", steps: [{ id: "send", kind: "message", message: "call" }] }] }],
+    scenarios: [{ id: "nested", label: "Nested", iterations: { outer: [2], inner: [2, 1] } }],
+  } });
+  const picture = renderDiagram(doc, { theme: "light", playback: { kind: "scenario", scenario: "nested" } });
+  expect(picture.svg).toContain("Attempt 1/2 · 1/2");
+  expect(picture.svg.match(/data-focus="attempt-0"/g)).toHaveLength(1);
 });
