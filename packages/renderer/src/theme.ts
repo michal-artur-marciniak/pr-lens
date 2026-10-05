@@ -27,6 +27,7 @@ export type Palette = {
   foreground: string;
   muted: string;
   edge: string;
+  selection: string;
   chip: string;
   pill: string;
   pillBorder: string;
@@ -58,6 +59,7 @@ const LIGHT: Palette = {
   foreground: "#1f2328",
   muted: "#59636e",
   edge: "#8c959f",
+  selection: "#0969da",
   chip: "#f1f3f5",
   pill: "#ffffff",
   pillBorder: "#d8dee4",
@@ -87,6 +89,7 @@ const DARK: Palette = {
   foreground: "#e6edf3",
   muted: "#9198a1",
   edge: "#6e7681",
+  selection: "#58a6ff",
   chip: "rgba(110,118,129,.18)",
   pill: "#0d1117",
   pillBorder: "#21262d",
@@ -138,6 +141,7 @@ const NEUTRAL: Palette = {
   foreground: "#cdd9e5",
   muted: "#909dab",
   edge: "#768390",
+  selection: "#539bf5",
   chip: "rgba(144,157,171,.16)",
   pill: "#22272e",
   pillBorder: "#373e47",
