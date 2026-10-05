@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "0.1.0",
+  "kind": "diagram",
+  "title": "Validate delivery and retry transient failures",
+  "diagram": {
+    "kind": "flowchart",
+    "nodes": [
+      {
+        "id": "start",
+        "kind": "start",
+        "label": "Receive a signed delivery request"
+      },
+      {
+        "id": "validate",
+        "kind": "process",
+        "label": "Validate the signature and load delivery configuration"
+      },
+      {
+        "id": "send",
+        "kind": "process",
+        "label": "Send the delivery payload to the configured endpoint"
+      },
+      {
+        "id": "outcome",
+        "kind": "decision",
+        "label": "Did the endpoint accept the delivery?"
+      },
+      {
+        "id": "backoff",
+        "kind": "process",
+        "label": "Wait for the exponential backoff interval before retrying"
+      },
+      {
+        "id": "done",
+        "kind": "end",
+        "label": "Record the successful delivery and finish"
+      }
+    ],
+    "edges": [
+      {
+        "id": "receive",
+        "from": "start",
+        "to": "validate"
+      },
+      {
+        "id": "dispatch",
+        "from": "validate",
+        "to": "send"
+      },
+      {
+        "id": "inspect",
+        "from": "send",
+        "to": "outcome"
+      },
+      {
+        "id": "retry",
+        "from": "outcome",
+        "to": "backoff",
+        "label": "temporary failure"
+      },
+      {
+        "id": "again",
+        "from": "backoff",
+        "to": "send",
+        "label": "retry after backoff"
+      },
+      {
+        "id": "accepted",
+        "from": "outcome",
+        "to": "done",
+        "label": "accepted"
+      }
+    ],
+    "scenarios": [
+      {
+        "id": "retry-delivery",
+        "label": "Temporary failure, then successful delivery",
+        "path": [
+          "receive",
+          "dispatch",
+          "inspect",
+          "retry",
+          "again",
+          "inspect",
+          "accepted"
+        ]
+      }
+    ]
+  }
+}

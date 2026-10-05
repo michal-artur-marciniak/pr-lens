@@ -114,3 +114,19 @@ export const truncate = (
   if (kept === 0) return ELLIPSIS;
   return `${characters.slice(0, kept).join("").trimEnd()}${ELLIPSIS}`;
 };
+
+/** Break labels by measured width, including identifiers with no spaces. */
+export const wrapLabel = (label: string, width: number, face: Face, size: number): string[] => {
+  const result: string[] = [];
+  let line = "";
+  for (const word of label.split(/\s+/u)) {
+    if (line !== "" && measure(`${line} ${word}`, face, size) > width) { result.push(line); line = ""; }
+    if (line !== "") line += " ";
+    for (const character of word) {
+      if (line !== "" && measure(line + character, face, size) > width) { result.push(line); line = ""; }
+      line += character;
+    }
+  }
+  if (line !== "") result.push(line);
+  return result;
+};
