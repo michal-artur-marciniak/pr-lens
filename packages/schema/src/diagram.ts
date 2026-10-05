@@ -1,3 +1,4 @@
+import { MatrixDiagram, matrixIssues } from "./matrix-diagram.js";
 import { SankeyDiagram, sankeyIssues } from "./sankey-diagram.js";
 import { TreeDiagram, treeIssues } from "./tree-diagram.js";
 import { GanttDiagram, ganttIssues } from "./gantt-diagram.js";
@@ -9,7 +10,7 @@ import { z } from "zod";
 import { Delta, Id, Label, Summary } from "./primitives.js";
 import { PrLensSchemaError, type Parsed, type SchemaIssue } from "./errors.js";
 
-export const DIAGRAM_SCHEMA_VERSION = "0.7.0" as const;
+export const DIAGRAM_SCHEMA_VERSION = "0.8.0" as const;
 
 export const DiagramNode = z.strictObject({
   id: Id,
@@ -35,11 +36,11 @@ export const FlowchartDiagram = z.strictObject({
 export type FlowchartDiagram = z.infer<typeof FlowchartDiagram>;
 
 export const DiagramDoc = z.strictObject({
-  schemaVersion: z.string().regex(/^0\.[1234567]\.\d+$/, "unsupported experimental diagram version"),
+  schemaVersion: z.string().regex(/^0\.[12345678]\.\d+$/, "unsupported experimental diagram version"),
   kind: z.literal("diagram"),
   title: Label,
   summary: Summary.optional(),
-  diagram: z.discriminatedUnion("kind", [FlowchartDiagram, SequenceDiagram, EntityRelationshipDiagram, StateDiagram, GanttDiagram, TreeDiagram, SankeyDiagram]),
+  diagram: z.discriminatedUnion("kind", [FlowchartDiagram, SequenceDiagram, EntityRelationshipDiagram, StateDiagram, GanttDiagram, TreeDiagram, SankeyDiagram, MatrixDiagram]),
 });
 export type DiagramDoc = z.infer<typeof DiagramDoc>;
 
@@ -94,6 +95,7 @@ export const safeParseDiagramDoc = (input: unknown): Parsed<DiagramDoc> => {
     }
     const issues = (() => {
       switch (parsed.data.diagram.kind) {
+        case "matrix": return matrixIssues(parsed.data.diagram);
         case "sankey": return sankeyIssues(parsed.data.diagram);
         case "tree": return treeIssues(parsed.data.diagram);
         case "gantt": return ganttIssues(parsed.data.diagram);

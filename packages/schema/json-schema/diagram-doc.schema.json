@@ -7,7 +7,7 @@
   "properties": {
     "schemaVersion": {
       "type": "string",
-      "pattern": "^0\\.[1234567]\\.\\d+$"
+      "pattern": "^0\\.[12345678]\\.\\d+$"
     },
     "kind": {
       "type": "string",
@@ -1333,6 +1333,225 @@
             "kind",
             "nodes",
             "flows"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "matrix"
+            },
+            "rows": {
+              "minItems": 1,
+              "maxItems": 16,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                    "description": "Stable identifier, unique within its collection in a document."
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "description": "Short display label."
+                  },
+                  "delta": {
+                    "default": "unchanged",
+                    "type": "string",
+                    "enum": [
+                      "added",
+                      "modified",
+                      "removed",
+                      "unchanged"
+                    ],
+                    "description": "Change state relative to the base commit."
+                  }
+                },
+                "required": [
+                  "id",
+                  "label"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "columns": {
+              "minItems": 1,
+              "maxItems": 12,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                    "description": "Stable identifier, unique within its collection in a document."
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "description": "Short display label."
+                  },
+                  "delta": {
+                    "default": "unchanged",
+                    "type": "string",
+                    "enum": [
+                      "added",
+                      "modified",
+                      "removed",
+                      "unchanged"
+                    ],
+                    "description": "Change state relative to the base commit."
+                  }
+                },
+                "required": [
+                  "id",
+                  "label"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "cells": {
+              "default": [],
+              "maxItems": 192,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                    "description": "Stable identifier, unique within its collection in a document."
+                  },
+                  "row": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                    "description": "Stable identifier, unique within its collection in a document."
+                  },
+                  "column": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                    "description": "Stable identifier, unique within its collection in a document."
+                  },
+                  "kind": {
+                    "default": "present",
+                    "type": "string",
+                    "enum": [
+                      "present",
+                      "absent",
+                      "unknown"
+                    ]
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "description": "Short display label."
+                  },
+                  "delta": {
+                    "default": "unchanged",
+                    "type": "string",
+                    "enum": [
+                      "added",
+                      "modified",
+                      "removed",
+                      "unchanged"
+                    ],
+                    "description": "Change state relative to the base commit."
+                  }
+                },
+                "required": [
+                  "id",
+                  "row",
+                  "column"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "scenarios": {
+              "default": [],
+              "maxItems": 16,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                    "description": "Stable identifier, unique within its collection in a document."
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "description": "Short display label."
+                  },
+                  "steps": {
+                    "minItems": 1,
+                    "maxItems": 64,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "row": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128,
+                          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                          "description": "Stable identifier, unique within its collection in a document."
+                        },
+                        "cells": {
+                          "minItems": 1,
+                          "maxItems": 12,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 128,
+                            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                            "description": "Stable identifier, unique within its collection in a document."
+                          }
+                        }
+                      },
+                      "required": [
+                        "row",
+                        "cells"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "id",
+                  "label",
+                  "steps"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "rows",
+            "columns"
           ],
           "additionalProperties": false
         }

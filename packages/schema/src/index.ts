@@ -135,3 +135,5 @@ export * from "./gantt-diagram.js";
 export * from "./tree-diagram.js";
 
 export * from "./sankey-diagram.js";
+
+export * from "./matrix-diagram.js";
