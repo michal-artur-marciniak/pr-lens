@@ -36,3 +36,5 @@ The experimental layout supports one level of groups and up to 64 nodes. Large d
 ## Shared appearance
 
 Architecture graphs, data-flow graphs and native diagrams use `svg/components.ts` for card surfaces, card groups, badges, label pills, text roles, lanes, lifelines and activations. Their appearance comes from `svg/styles.ts` and dimensions from `design.ts`. Pulse appearance is shared through `svg/pulse.ts`; each diagram keeps its own playback clock. Native shapes such as decisions and datastores retain their geometry while using the same card styles. Delta badges use the same NEW, CHANGED and REMOVED labels as architecture graphs.
+
+A selected scenario has a persistent blue path, with a stronger line and a subtle halo. It stays visible when pulses are between steps or reduced motion is enabled. Blue indicates the scenario; green, amber and red still indicate code changes. Changed edges keep their delta colour on the core line and gain a blue halo when selected. An export without `--scenario` keeps every edge in its normal style.
