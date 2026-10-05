@@ -6,6 +6,7 @@ The experiment adds native visual families:
 
 - [Flowcharts](flowchart/README.md): shapes, groups, decisions, back edges and explicit scenario paths.
 - [Sequences](sequence/README.md): lifelines, messages, choices, repeats and parallel branches with a shared clock.
+- [Sankey](sankey/README.md): volume-proportional flows and conserved splits.
 - [Trees](tree/README.md): module hierarchy and root-to-descendant playback.
 - [Gantt](gantt/README.md): task duration, milestones, dependencies and schedule playback.
 - [States](state/README.md): lifecycle transitions, guards, initial/final states and selected paths.
