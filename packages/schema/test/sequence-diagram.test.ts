@@ -33,3 +33,14 @@ describe("sequence scenarios", () => {
     }
   });
 });
+
+it("reports each executed retry iteration on the shared clock", () => {
+  const model = fixture("retry");
+  const scenario = model.scenarios.find((item) => item.id === "retry-success");
+  if (scenario === undefined) throw new Error("missing retry scenario");
+  expect(compileSequence(model, scenario).repeats).toEqual([
+    { id: "attempts", start: 1, duration: 2, iteration: 1, total: 3 },
+    { id: "attempts", start: 3, duration: 2, iteration: 2, total: 3 },
+    { id: "attempts", start: 5, duration: 2, iteration: 3, total: 3 },
+  ]);
+});

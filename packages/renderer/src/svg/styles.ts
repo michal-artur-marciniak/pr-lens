@@ -10,6 +10,7 @@ export const stylesFor = (palette: Palette) => ({
   lane: { fill: palette.lane },
   laneLabel: { "font-size": 10, "font-weight": 700, "letter-spacing": ".12em", fill: palette.muted },
   heading: { "font-size": 16, "font-weight": 600, fill: palette.foreground },
+  activeCaption: { "font-size": 11, "font-weight": 600, fill: palette.selection },
   caption: { "font-size": 11, fill: palette.muted },
   title: { "font-weight": 600, fill: palette.foreground },
   subtitle: { "font-size": 9.5, fill: palette.muted, "font-family": MONO_STACK },
