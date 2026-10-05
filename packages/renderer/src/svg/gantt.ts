@@ -31,7 +31,7 @@ export const paintGantt = (diagram: GanttDiagram, palette: Palette, animated: bo
         if (animated) {
           const begin = task.start / max * 8 / 9, end = (task.start + task.duration) / max * 8 / 9;
           const keys = [...new Set([0, begin, end, 8 / 9, 1])];
-          bars.push(wrap("g", { class: "diagram-motion" }, wrap("rect", { x: box.x, y, width: 0, height: 24, rx: 6, fill: palette.selection, "fill-opacity": 0.15 }, tag("animate", { attributeName: "width", dur: "9s", repeatCount: "indefinite", keyTimes: keys.join(";"), values: keys.map((key) => key <= begin || key === 1 ? 0 : key >= end ? box.width : box.width * (key - begin) / (end - begin)).join(";"), calcMode: "linear" }))));
+          bars.push(timedFocus(wrap("rect", { x: box.x, y, width: 0, height: 24, rx: 6, fill: palette.selection, "fill-opacity": 0.15 }, tag("animate", { attributeName: "width", dur: "9s", repeatCount: "indefinite", keyTimes: keys.join(";"), values: keys.map((key) => key <= begin || key === 1 ? 0 : key >= end ? box.width : box.width * (key - begin) / (end - begin)).join(";"), calcMode: "linear" })), 0, 8, 9, `progress-${task.id}`));
         }
         break;
       }

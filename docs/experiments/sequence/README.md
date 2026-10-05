@@ -24,7 +24,7 @@ Up to eight participants and 64 message definitions; nesting is limited to eight
 
 Static exports retain the complete structural picture with choice, repeat and parallel frames. Selecting a scenario renders its executed trace: unused branches are omitted, retries occupy separate rows, and concurrent messages share a time band with enough vertical separation to keep their labels readable. These are logical steps, not measured durations. Parallel frames end with a join after their slowest branch. Scenario geometry depends on the selected execution.
 
-The active message label gets a subtle blue pill while a pulse and trace travel along its route. Attempt counters appear beside messages belonging to that repeat, including nested repeats; unrelated parallel calls do not inherit a counter. No branch dots or active frame borders remain. Change colours on message strokes are preserved. Reduced motion leaves the selected execution readable without moving effects. SVGs are self-contained, with no runtime scripts.
+The active message label gets a subtle blue pill while a pulse and trace travel along its route. Attempt counters appear beside messages belonging to that repeat, including nested repeats; nested counters share one caption, ordered from the innermost repeat outward. Unrelated parallel calls do not inherit a counter. No branch dots or active frame borders remain. Change colours on message strokes are preserved. Reduced motion leaves the selected execution readable without moving effects. SVGs are self-contained, with no runtime scripts.
 
 The atlas maps message IDs to their first occurrence and exposes `occurrences` keyed by `event-N` and `parallel-N` for the selected execution. Static exports retain the original structural atlas.
 
