@@ -13,6 +13,7 @@ const appearance = (markup: string | undefined, keepDimensions = false) => {
 describe("shared architecture and native appearance", () => {
   for (const theme of THEMES) for (const delta of ["added", "modified", "removed", "unchanged"] as const) {
     const families = [
+      { name: "state", diagram: { kind: "state", states: [{ id: "start", kind: "initial", label: "Start" }, { id: "node", label: "GET /health", delta }], transitions: [{ id: "create", from: "start", to: "node", label: "Create" }] } },
       { name: "flowchart", diagram: { kind: "flowchart", nodes: [{ id: "node", kind: "process", label: "GET /health", delta }] } },
       { name: "sequence", diagram: { kind: "sequence", participants: [{ id: "node", label: "GET /health", delta }, { id: "other", label: "Other" }], messages: [{ id: "request", from: "node", to: "other", label: "Call" }], steps: [{ id: "step", kind: "message", message: "request" }] } },
       { name: "entity-relationship", diagram: { kind: "entity-relationship", entities: [{ id: "node", label: "GET /health", delta, fields: [{ id: "field", label: "id", type: "uuid" }] }, { id: "other", label: "Other", fields: [{ id: "other-field", label: "id", type: "uuid" }] }] } },

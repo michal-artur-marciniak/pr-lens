@@ -127,3 +127,5 @@ export * from "./diagram.js";
 export * from "./sequence-diagram.js";
 
 export * from "./entity-relationship-diagram.js";
+
+export * from "./state-diagram.js";

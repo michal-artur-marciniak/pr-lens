@@ -1,3 +1,4 @@
+import { StateDiagram, stateIssues } from "./state-diagram.js";
 import { assertNever } from "./utils.js";
 import { SequenceDiagram, sequenceIssues } from "./sequence-diagram.js";
 import { EntityRelationshipDiagram, entityRelationshipIssues } from "./entity-relationship-diagram.js";
@@ -5,7 +6,7 @@ import { z } from "zod";
 import { Delta, Id, Label, Summary } from "./primitives.js";
 import { PrLensSchemaError, type Parsed, type SchemaIssue } from "./errors.js";
 
-export const DIAGRAM_SCHEMA_VERSION = "0.3.0" as const;
+export const DIAGRAM_SCHEMA_VERSION = "0.4.0" as const;
 
 export const DiagramNode = z.strictObject({
   id: Id,
@@ -31,11 +32,11 @@ export const FlowchartDiagram = z.strictObject({
 export type FlowchartDiagram = z.infer<typeof FlowchartDiagram>;
 
 export const DiagramDoc = z.strictObject({
-  schemaVersion: z.string().regex(/^0\.[123]\.\d+$/, "unsupported experimental diagram version"),
+  schemaVersion: z.string().regex(/^0\.[1234]\.\d+$/, "unsupported experimental diagram version"),
   kind: z.literal("diagram"),
   title: Label,
   summary: Summary.optional(),
-  diagram: z.discriminatedUnion("kind", [FlowchartDiagram, SequenceDiagram, EntityRelationshipDiagram]),
+  diagram: z.discriminatedUnion("kind", [FlowchartDiagram, SequenceDiagram, EntityRelationshipDiagram, StateDiagram]),
 });
 export type DiagramDoc = z.infer<typeof DiagramDoc>;
 
@@ -90,6 +91,7 @@ export const safeParseDiagramDoc = (input: unknown): Parsed<DiagramDoc> => {
     }
     const issues = (() => {
       switch (parsed.data.diagram.kind) {
+        case "state": return stateIssues(parsed.data.diagram);
         case "flowchart": return flowchartIssues(parsed.data.diagram);
         case "sequence": return sequenceIssues(parsed.data.diagram);
         case "entity-relationship": return entityRelationshipIssues(parsed.data.diagram);
