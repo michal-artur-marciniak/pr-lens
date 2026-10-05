@@ -1,14 +1,17 @@
 import { assertNever, compileSequence, type SequenceDiagram, type SequenceScenario, type SequenceStep } from "@coldtea/pr-lens-schema";
 import type { Box } from "../geometry.js";
+import { CARD_RADIUS } from "../design.js";
+import { cardAttributes, cardGroupAttributes } from "./styles.js";
 import { measure } from "../text.js";
 import type { Palette } from "../theme.js";
-import { diagramColour, diagramDelta, diagramText, timedPulse } from "./diagram-primitives.js";
+import { diagramColour, diagramDelta, diagramLabel, diagramText, timedPulse } from "./diagram-primitives.js";
 import { markerFor, openMarkerFor, toneFor } from "./document.js";
 import { tag, wrap } from "./primitives.js";
 
 export const paintSequence = (diagram: SequenceDiagram, palette: Palette, scenario: SequenceScenario | undefined) => {
-  const column = Math.max(170, ...diagram.participants.map((participant) => Math.ceil(measure(participant.label, "sans", 13) + 64)));
-  const width = diagram.participants.length * column + 80;
+  const column = Math.max(190, ...diagram.participants.map((participant) => Math.ceil(measure(participant.label, "sans", 13) + 64)));
+  const selfWidth = Math.max(0, ...diagram.messages.filter((message) => message.kind === "self").map((message) => measure(message.label, "sans-bold", 9.5) + 20));
+  const width = diagram.participants.length * column + 80 + selfWidth;
   const elements: Record<string, Box> = {};
   const centres = new Map<string, number>();
   const rows = new Map<string, number>();
@@ -19,7 +22,7 @@ export const paintSequence = (diagram: SequenceDiagram, palette: Palette, scenar
     const centre = box.x + box.width / 2;
     elements[participant.id] = box;
     centres.set(participant.id, centre);
-    headers.push(wrap("g", { "data-element": participant.id }, tag("rect", { ...box, rx: 8, fill: palette.card, stroke: diagramColour(participant.delta, palette) }) + diagramText(participant.label, centre, 100, palette) + diagramDelta(participant.delta, box, palette)));
+    headers.push(wrap("g", { "data-element": participant.id, ...cardGroupAttributes(participant.delta, palette) }, tag("rect", { ...box, rx: CARD_RADIUS, ...cardAttributes(participant.delta, palette) }) + diagramText(participant.label, centre, 100, palette) + diagramDelta(participant.delta, box, palette)));
   });
   const layout = (steps: readonly SequenceStep[], top: number, depth: number): number => {
     let y = top;
@@ -48,7 +51,7 @@ export const paintSequence = (diagram: SequenceDiagram, palette: Palette, scenar
       if (step.kind !== "message") {
         const box = { x: 20 + depth * 10, y: start, width: width - 40 - depth * 20, height: y - start };
         elements[step.id] = box;
-        frames.push(tag("rect", { ...box, rx: 5, fill: "none", stroke: palette.muted }) + diagramText(`${step.kind}: ${step.label}`, box.x + 8, box.y + 20, palette, 11, "start"));
+        frames.unshift(tag("rect", { ...box, rx: 10, fill: palette.lane, stroke: palette.cardBorder }) + diagramText(`${step.kind}: ${step.label}`, box.x + 8, box.y + 20, palette, 11, "start"));
       }
     }
     return y;
@@ -74,10 +77,10 @@ export const paintSequence = (diagram: SequenceDiagram, palette: Palette, scenar
     }
     const matchingReturn = diagram.messages.find((candidate) => candidate.kind === "return" && candidate.from === message.to && candidate.to === message.from && (rows.get(candidate.id) ?? 0) > y);
     const returnY = matchingReturn === undefined ? undefined : rows.get(matchingReturn.id);
-    if (message.kind === "sync" && returnY !== undefined) arrows.push(tag("rect", { x: x2 - 4, y, width: 8, height: returnY - y, fill: palette.card, stroke: palette.cardBorder }));
-    arrows.push(wrap("g", { "data-element": message.id }, tag("path", { d: path, fill: "none", stroke: message.delta === "unchanged" ? palette.edge : diagramColour(message.delta, palette), "stroke-width": 1.8, "stroke-dasharray": message.kind === "return" || message.delta === "removed" ? "5 4" : undefined, "marker-end": marker }) + diagramText(message.label, self ? x1 + 40 : (x1 + x2) / 2, y - 8, palette, 12, self ? "start" : "middle")));
+    if (message.kind === "sync" && returnY !== undefined) arrows.push(tag("rect", { x: x2 - 4, y, width: 8, height: returnY - y, fill: palette.chip, stroke: palette.cardBorder }));
+    arrows.push(wrap("g", { "data-element": message.id }, tag("path", { d: path, fill: "none", stroke: message.delta === "unchanged" ? palette.edge : diagramColour(message.delta, palette), "stroke-width": 1.5, "stroke-dasharray": message.kind === "return" || message.delta === "removed" ? "5 4" : undefined, "marker-end": marker }) + diagramLabel(message.label, self ? x1 + 45 + measure(message.label, "sans-bold", 9.5) / 2 : (x1 + x2) / 2, y - 8, palette)));
     for (const event of timeline?.events ?? []) if (event.message === message.id)
-      arrows.push(timedPulse(path, event.start, event.duration, (timeline?.duration ?? 0) + 1, palette.foreground));
+      arrows.push(timedPulse(path, event.start, event.duration, (timeline?.duration ?? 0) + 1, message.delta === "unchanged" ? palette.edge : diagramColour(message.delta, palette)));
   }
-  return { width, height, body: [...lines, ...frames, ...headers, ...arrows].join(""), atlas: { elements } };
+  return { width, height, body: [...frames, ...lines, ...headers, ...arrows].join(""), atlas: { elements } };
 };
