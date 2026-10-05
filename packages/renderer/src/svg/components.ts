@@ -1,5 +1,5 @@
 import type { Delta } from "@coldtea/pr-lens-schema";
-import { BADGE_HEIGHT, BADGE_RADIUS, CARD_RADIUS, LANE_RADIUS } from "../design.js";
+import { BADGE_HEIGHT, BADGE_RADIUS, CARD_RADIUS, LANE_RADIUS, TITLE_SIZE } from "../design.js";
 import { coord, type Box } from "../geometry.js";
 import type { Palette } from "../theme.js";
 import type { Tone } from "./document.js";
@@ -61,3 +61,6 @@ export const paintLifeline = (x: number, top: number, bottom: number, palette: P
 
 export const paintActivation = (box: Box, palette: Palette, tone: "added" | "neutral" = "added", attributes: Attributes = {}): string =>
   tag("rect", { ...attributes, x: coord(box.x), y: coord(box.y), width: box.width, height: coord(box.height), rx: 4, ...stylesFor(palette)[tone === "added" ? "activation" : "neutralActivation"] });
+
+export const paintMultilineTitle = (labels: readonly string[], x: number, centreY: number, palette: Palette): string =>
+  labels.map((label, index) => paintText({ x, y: centreY + (index - (labels.length - 1) / 2) * 16 + 5, "font-size": TITLE_SIZE, "text-anchor": "middle" }, label, "title", palette)).join("");

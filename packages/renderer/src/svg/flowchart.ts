@@ -1,11 +1,11 @@
-import { paintCardGroup, paintCardSurface, paintLaneSurface, paintText } from "./components.js";
+import { paintCardGroup, paintCardSurface, paintLaneSurface, paintText, paintMultilineTitle } from "./components.js";
 import { assertNever, type FlowchartDiagram } from "@coldtea/pr-lens-schema";
 import type { Box } from "../geometry.js";
 import { CARD_HEIGHT, ROW_GAP } from "../design.js";
 import { cardAttributes, connectionAttributes } from "./styles.js";
-import { measure } from "../text.js";
+import { measure, wrapLabel } from "../text.js";
 import type { Palette } from "../theme.js";
-import { diagramDelta, diagramLabel, diagramText, roundedDiagramRoute, timedPulse, timedRouteHighlight } from "./diagram-primitives.js";
+import { diagramDelta, diagramLabel, roundedDiagramRoute, timedPulse, timedRouteHighlight } from "./diagram-primitives.js";
 import { markerFor, toneFor } from "./document.js";
 import { tag, wrap } from "./primitives.js";
 
@@ -36,8 +36,9 @@ export const paintFlowchart = (diagram: FlowchartDiagram, palette: Palette, path
       const to = ranks.get(edge.to) ?? 0;
       if (!backEdges.has(edge.id)) ranks.set(edge.to, Math.max(to, from + 1));
     }
-  const width = Math.max(190, ...diagram.nodes.map((node) => Math.ceil(measure(node.label, "sans", 13) + (node.kind === "decision" ? 100 : 36))));
-  const height = CARD_HEIGHT;
+  const width = Math.min(260, Math.max(190, ...diagram.nodes.map((node) => Math.ceil(measure(node.label, "sans", 13) + (node.kind === "decision" ? 100 : 36)))));
+  const labels = new Map(diagram.nodes.map((node) => [node.id, wrapLabel(node.label, node.kind === "decision" ? width * 0.55 : width - 28, "sans-bold", 13)]));
+  const height = Math.max(CARD_HEIGHT, ...diagram.nodes.map((node) => { const count = labels.get(node.id)?.length ?? 1; return count === 1 ? CARD_HEIGHT : count * 16 + (node.kind === "decision" ? 48 : 24); }));
   const layerIds = Array.from(new Set(ranks.values())).sort((a, b) => a - b);
   const layers = layerIds.map((rank) => diagram.nodes.filter((node) => ranks.get(node.id) === rank));
   const widest = Math.max(...layers.map((layer) => layer.length));
@@ -101,7 +102,7 @@ export const paintFlowchart = (diagram: FlowchartDiagram, palette: Palette, path
       case "datastore": shape = tag("rect", { ...box, ...attrs, rx: 12 }) + tag("ellipse", { cx: box.x + box.width / 2, cy: box.y + 12, rx: box.width / 2, ry: 12, ...attrs }); break;
       default: return assertNever(node.kind);
     }
-    bodies.push(paintCardGroup(node.delta, palette, shape + diagramText(node.label, box.x + box.width / 2, box.y + box.height / 2 + 5, palette) + diagramDelta(node.delta, box, palette), { "data-element": node.id }));
+    bodies.push(paintCardGroup(node.delta, palette, shape + paintMultilineTitle(labels.get(node.id) ?? [node.label], box.x + box.width / 2, box.y + box.height / 2, palette) + diagramDelta(node.delta, box, palette), { "data-element": node.id }));
   }
   return { width: canvasWidth, height: canvasHeight, body: bodies.join(""), atlas: { elements } };
 };

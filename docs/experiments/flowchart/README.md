@@ -38,3 +38,9 @@ The experimental layout supports one level of groups and up to 64 nodes. Large d
 Architecture graphs, data-flow graphs and native diagrams use `svg/components.ts` for card surfaces, card groups, badges, label pills, text roles, lanes, lifelines and activations. Their appearance comes from `svg/styles.ts` and dimensions from `design.ts`. Pulse appearance is shared through `svg/pulse.ts`; each diagram keeps its own playback clock. Native shapes such as decisions and datastores retain their geometry while using the same card styles. Delta badges use the same NEW, CHANGED and REMOVED labels as architecture graphs.
 
 A selected scenario reveals a blue trace as each pulse crosses an edge. Visited edges stay highlighted until the end of the run, then the trace disappears for the pause before the next cycle. Reduced motion hides both pulses and traces. Changed edges retain their delta colour, with a blue animated halo showing the scenario.
+
+`delivery.diagram.json` exercises long labels and a return route: a failed delivery waits for backoff, tries again and succeeds. Node labels wrap by measured text width; identifiers without spaces also wrap instead of forcing an extremely wide canvas.
+
+```sh
+node packages/cli/dist/bin.js diagram docs/experiments/flowchart/delivery.diagram.json --scenario retry-delivery --theme both
+```

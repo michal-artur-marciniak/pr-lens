@@ -1,0 +1,255 @@
+{
+  "schemaVersion": "0.2.0",
+  "kind": "diagram",
+  "title": "Authorize checkout, then fetch stock and price",
+  "diagram": {
+    "kind": "sequence",
+    "participants": [
+      {
+        "id": "client",
+        "label": "Client"
+      },
+      {
+        "id": "api",
+        "label": "Checkout API"
+      },
+      {
+        "id": "stock",
+        "label": "Inventory"
+      },
+      {
+        "id": "pricing",
+        "label": "Pricing"
+      }
+    ],
+    "messages": [
+      {
+        "id": "request",
+        "from": "client",
+        "to": "api",
+        "label": "Submit checkout",
+        "kind": "sync"
+      },
+      {
+        "id": "verify",
+        "from": "api",
+        "to": "api",
+        "label": "Verify signature and claims",
+        "kind": "self"
+      },
+      {
+        "id": "reject",
+        "from": "api",
+        "to": "client",
+        "label": "401 \u00b7 invalid credentials",
+        "kind": "return"
+      },
+      {
+        "id": "stock-request",
+        "from": "api",
+        "to": "stock",
+        "label": "Reserve available inventory",
+        "kind": "sync"
+      },
+      {
+        "id": "stock-poll",
+        "from": "api",
+        "to": "stock",
+        "label": "Check reservation status",
+        "kind": "sync"
+      },
+      {
+        "id": "stock-pending",
+        "from": "stock",
+        "to": "api",
+        "label": "Pending \u00b7 retry later",
+        "kind": "return"
+      },
+      {
+        "id": "stock-ready",
+        "from": "stock",
+        "to": "api",
+        "label": "Reservation confirmed",
+        "kind": "return"
+      },
+      {
+        "id": "price-request",
+        "from": "api",
+        "to": "pricing",
+        "label": "Calculate totals and promotions",
+        "kind": "sync"
+      },
+      {
+        "id": "compute-price",
+        "from": "pricing",
+        "to": "pricing",
+        "label": "Apply promotional rules",
+        "kind": "self"
+      },
+      {
+        "id": "price-ready",
+        "from": "pricing",
+        "to": "api",
+        "label": "Totals confirmed",
+        "kind": "return"
+      },
+      {
+        "id": "response",
+        "from": "api",
+        "to": "client",
+        "label": "201 \u00b7 checkout ready",
+        "kind": "return"
+      }
+    ],
+    "steps": [
+      {
+        "id": "step-request",
+        "kind": "message",
+        "message": "request"
+      },
+      {
+        "id": "step-verify",
+        "kind": "message",
+        "message": "verify"
+      },
+      {
+        "id": "authorized",
+        "kind": "choice",
+        "label": "Authentication",
+        "branches": [
+          {
+            "id": "denied",
+            "label": "Invalid credentials",
+            "steps": [
+              {
+                "id": "step-reject",
+                "kind": "message",
+                "message": "reject"
+              }
+            ]
+          },
+          {
+            "id": "allowed",
+            "label": "Authenticated",
+            "steps": [
+              {
+                "id": "checkout-data",
+                "kind": "parallel",
+                "label": "Inventory and pricing",
+                "branches": [
+                  {
+                    "id": "inventory-branch",
+                    "label": "Inventory reservation",
+                    "steps": [
+                      {
+                        "id": "step-stock-request",
+                        "kind": "message",
+                        "message": "stock-request"
+                      },
+                      {
+                        "id": "stock-attempts",
+                        "kind": "repeat",
+                        "label": "Retry inventory reservation",
+                        "steps": [
+                          {
+                            "id": "step-stock-poll",
+                            "kind": "message",
+                            "message": "stock-poll"
+                          },
+                          {
+                            "id": "stock-result",
+                            "kind": "choice",
+                            "label": "Reservation result",
+                            "branches": [
+                              {
+                                "id": "pending",
+                                "label": "Still pending",
+                                "steps": [
+                                  {
+                                    "id": "step-stock-pending",
+                                    "kind": "message",
+                                    "message": "stock-pending"
+                                  }
+                                ]
+                              },
+                              {
+                                "id": "reserved",
+                                "label": "Reservation ready",
+                                "steps": [
+                                  {
+                                    "id": "step-stock-ready",
+                                    "kind": "message",
+                                    "message": "stock-ready"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "pricing-branch",
+                    "label": "Price calculation",
+                    "steps": [
+                      {
+                        "id": "step-price-request",
+                        "kind": "message",
+                        "message": "price-request"
+                      },
+                      {
+                        "id": "step-compute-price",
+                        "kind": "message",
+                        "message": "compute-price"
+                      },
+                      {
+                        "id": "step-price-ready",
+                        "kind": "message",
+                        "message": "price-ready"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "step-response",
+                "kind": "message",
+                "message": "response"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "scenarios": [
+      {
+        "id": "checkout-retry",
+        "label": "Authorized checkout with inventory retry",
+        "choices": {
+          "authorized": [
+            "allowed"
+          ],
+          "stock-result": [
+            "pending",
+            "reserved"
+          ]
+        },
+        "iterations": {
+          "stock-attempts": [
+            2
+          ]
+        }
+      },
+      {
+        "id": "unauthorized",
+        "label": "Reject invalid credentials",
+        "choices": {
+          "authorized": [
+            "denied"
+          ]
+        }
+      }
+    ]
+  }
+}

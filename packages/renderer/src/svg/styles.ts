@@ -17,6 +17,7 @@ export const stylesFor = (palette: Palette) => ({
   glyph: { fill: palette.muted },
   glyphStroke: { stroke: palette.muted, "stroke-width": 1.4, fill: "none" },
   badgeText: { "font-size": 8.5, "font-weight": 700, "letter-spacing": ".06em" },
+  focus: { fill: "none", stroke: palette.selection, "stroke-width": 2 },
   glow: { fill: "none", "stroke-width": 7, opacity: 0.14 },
   pill: { fill: palette.pill, stroke: palette.pillBorder, "stroke-width": 1 },
   pillText: { "font-size": 9.5, "font-weight": 600 },

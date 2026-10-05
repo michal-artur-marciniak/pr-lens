@@ -73,3 +73,11 @@ export const timedRouteHighlight = (path: string, start: number, activeDuration:
   return wrap("g", { class: "diagram-motion", "data-route-highlight": "true", opacity: 0 },
     tag("animate", { attributeName: "opacity", dur: `${cycle}s`, repeatCount: "indefinite", keyTimes: visibility.join(";"), values: visibility.map((key) => key >= begin && key < activeDuration / cycle ? 1 : 0).join(";"), calcMode: "discrete" }) + line(true) + (delta === "unchanged" ? line(false) : ""));
 };
+
+export const timedFocus = (body: string, start: number, duration: number, cycle: number, id: string): string => {
+  const begin = start / cycle;
+  const end = (start + duration) / cycle;
+  const fade = Math.min(0.12 / cycle, (end - begin) / 3);
+  const keys = [...new Set([0, begin, begin + fade, end - fade, end, 1])];
+  return wrap("g", { class: "diagram-motion", "data-focus": id, opacity: 0 }, body + tag("animate", { attributeName: "opacity", dur: `${cycle}s`, repeatCount: "indefinite", keyTimes: keys.join(";"), values: keys.map((key) => key > begin && key < end ? 1 : 0).join(";"), calcMode: "linear" }));
+};
