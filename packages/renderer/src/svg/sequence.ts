@@ -81,7 +81,7 @@ export const paintSequence = (diagram: SequenceDiagram, palette: Palette, scenar
       case "sync": case "return": case "self": marker = markerFor(toneFor(message.delta)); break;
       default: marker = assertNever(message.kind);
     }
-    const matchingReturn = diagram.messages.find((candidate) => candidate.kind === "return" && candidate.from === message.to && candidate.to === message.from && (rows.get(candidate.id) ?? 0) > y);
+    const matchingReturn = diagram.messages.filter((candidate) => candidate.kind === "return" && candidate.from === message.to && candidate.to === message.from && (rows.get(candidate.id) ?? 0) > y).sort((a, b) => (rows.get(a.id) ?? 0) - (rows.get(b.id) ?? 0)).at(-1);
     const returnY = matchingReturn === undefined ? undefined : rows.get(matchingReturn.id);
     if (message.kind === "sync" && returnY !== undefined) arrows.push(paintActivation({ x: x2 - 4, y, width: 8, height: returnY - y }, palette, "neutral"));
     arrows.push(wrap("g", { "data-element": message.id }, tag("path", { d: path, ...messageAttributes(message, palette), "marker-end": marker }) + diagramLabel(message.label, self ? x1 + 45 + measure(message.label, "sans-bold", 9.5) / 2 : (x1 + x2) / 2, y - 8, palette)));
