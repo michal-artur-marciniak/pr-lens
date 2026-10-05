@@ -123,3 +123,8 @@ export const messageAttributes = (message: Pick<FlowMessage, "delta" | "kind">, 
       return assertNever(message.kind);
   }
 };
+
+export const scenarioConnectionAttributes = (delta: Delta, palette: Palette, selected: boolean): Attributes => ({
+  ...connectionAttributes(delta, palette),
+  ...(selected ? { "stroke-width": 2.25, ...(delta === "unchanged" ? { stroke: palette.selection } : {}) } : {}),
+});
