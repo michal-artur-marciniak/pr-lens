@@ -107,7 +107,7 @@ export const edgeAttributes = (edge: GraphEdge, palette: Palette): Attributes =>
   }
 };
 
-export const messageAttributes = (message: FlowMessage, palette: Palette): Attributes => {
+export const messageAttributes = (message: Pick<FlowMessage, "delta" | "kind">, palette: Palette): Attributes => {
   const attributes = {
     ...connectionAttributes(message.delta, palette),
     "stroke-width": message.delta === "added" ? 2.25 : 1.5,
