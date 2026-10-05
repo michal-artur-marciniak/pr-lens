@@ -33,3 +33,4 @@ export {
 export { applyCorrections } from "./corrections.js";
 
 export { findView, flattenViews, resolveScope, type ScopedGraph } from "./scope.js";
+export { renderDiagram, DiagramRenderError, type DiagramPlayback, type DiagramRenderOptions, type DiagramPicture } from "./diagram.js";

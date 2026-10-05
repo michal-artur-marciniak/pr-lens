@@ -9,6 +9,8 @@ const count = (n: number, singular: string): string =>
 
 const describe = (validated: ValidatedDocument): string => {
   switch (validated.kind) {
+    case "diagram":
+      return `diagram document · ${validated.document.diagram.kind}`;
     case "graph": {
       const { lanes, nodes, edges, flows, lenses, walkthrough } = validated.document;
       const tour =

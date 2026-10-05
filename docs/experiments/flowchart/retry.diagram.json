@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "0.1.0",
+  "kind": "diagram",
+  "title": "Retry a failed job",
+  "diagram": {
+    "kind": "flowchart",
+    "direction": "right",
+    "groups": [
+      {
+        "id": "worker",
+        "label": "Worker"
+      }
+    ],
+    "nodes": [
+      {
+        "id": "start",
+        "kind": "start",
+        "label": "Job"
+      },
+      {
+        "id": "run",
+        "kind": "process",
+        "label": "Run job",
+        "group": "worker"
+      },
+      {
+        "id": "ok",
+        "kind": "decision",
+        "label": "Succeeded?",
+        "group": "worker"
+      },
+      {
+        "id": "end",
+        "kind": "end",
+        "label": "Done"
+      }
+    ],
+    "edges": [
+      {
+        "id": "enter",
+        "from": "start",
+        "to": "run"
+      },
+      {
+        "id": "result",
+        "from": "run",
+        "to": "ok"
+      },
+      {
+        "id": "retry",
+        "from": "ok",
+        "to": "run",
+        "label": "retry"
+      },
+      {
+        "id": "finish",
+        "from": "ok",
+        "to": "end",
+        "label": "yes"
+      }
+    ],
+    "scenarios": [
+      {
+        "id": "retry-once",
+        "label": "Retry once",
+        "path": [
+          "enter",
+          "result",
+          "retry",
+          "result",
+          "finish"
+        ]
+      }
+    ]
+  }
+}

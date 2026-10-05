@@ -123,3 +123,4 @@ export {
 } from "./live.js";
 
 export { assertNever } from "./utils.js";
+export * from "./diagram.js";
