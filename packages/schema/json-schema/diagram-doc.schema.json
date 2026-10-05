@@ -7,7 +7,7 @@
   "properties": {
     "schemaVersion": {
       "type": "string",
-      "pattern": "^0\\.[1234]\\.\\d+$"
+      "pattern": "^0\\.[12345]\\.\\d+$"
     },
     "kind": {
       "type": "string",
@@ -887,6 +887,189 @@
             "kind",
             "states",
             "transitions"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "gantt"
+            },
+            "unit": {
+              "default": "Time",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120,
+              "description": "Short display label."
+            },
+            "tasks": {
+              "minItems": 1,
+              "maxItems": 32,
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128,
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                        "description": "Stable identifier, unique within its collection in a document."
+                      },
+                      "label": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120,
+                        "description": "Short display label."
+                      },
+                      "start": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 10000
+                      },
+                      "delta": {
+                        "default": "unchanged",
+                        "type": "string",
+                        "enum": [
+                          "added",
+                          "modified",
+                          "removed",
+                          "unchanged"
+                        ],
+                        "description": "Change state relative to the base commit."
+                      },
+                      "dependsOn": {
+                        "default": [],
+                        "maxItems": 8,
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128,
+                          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                          "description": "Stable identifier, unique within its collection in a document."
+                        }
+                      },
+                      "kind": {
+                        "type": "string",
+                        "const": "task"
+                      },
+                      "duration": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 10000
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "label",
+                      "start",
+                      "kind",
+                      "duration"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128,
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                        "description": "Stable identifier, unique within its collection in a document."
+                      },
+                      "label": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120,
+                        "description": "Short display label."
+                      },
+                      "start": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 10000
+                      },
+                      "delta": {
+                        "default": "unchanged",
+                        "type": "string",
+                        "enum": [
+                          "added",
+                          "modified",
+                          "removed",
+                          "unchanged"
+                        ],
+                        "description": "Change state relative to the base commit."
+                      },
+                      "dependsOn": {
+                        "default": [],
+                        "maxItems": 8,
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128,
+                          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                          "description": "Stable identifier, unique within its collection in a document."
+                        }
+                      },
+                      "kind": {
+                        "type": "string",
+                        "const": "milestone"
+                      },
+                      "duration": {
+                        "default": 0,
+                        "type": "number",
+                        "const": 0
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "label",
+                      "start",
+                      "kind"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "scenarios": {
+              "default": [],
+              "maxItems": 1,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+                    "description": "Stable identifier, unique within its collection in a document."
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120,
+                    "description": "Short display label."
+                  }
+                },
+                "required": [
+                  "id",
+                  "label"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "tasks"
           ],
           "additionalProperties": false
         }

@@ -129,3 +129,5 @@ export * from "./sequence-diagram.js";
 export * from "./entity-relationship-diagram.js";
 
 export * from "./state-diagram.js";
+
+export * from "./gantt-diagram.js";
