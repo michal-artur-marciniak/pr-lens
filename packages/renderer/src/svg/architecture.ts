@@ -1,3 +1,4 @@
+import { paintBadge, paintCardGroup, paintCardSurface, paintLabelPill, paintLaneSurface, paintText } from "./components.js";
 import { assertNever } from "@coldtea/pr-lens-schema";
 import type { GraphEdge, GraphNode, LayoutHints } from "@coldtea/pr-lens-schema";
 import { truncate } from "../text.js";
@@ -9,14 +10,11 @@ import type { ScopedGraph } from "../scope.js";
 import { canvasFor, union } from "../bounds.js";
 import { coord, type Box } from "../geometry.js";
 import { relieveCongestion } from "../layout/congestion.js";
-import { lines, tag, textNode, wrap } from "./primitives.js";
+import { lines, tag, wrap } from "./primitives.js";
 import { curveBounds, type RoutedEdge } from "../layout/edges.js";
 import { atlasBoxes, emptyAtlas, type RenderAtlas } from "../atlas.js";
 import { markerFor, shifted, toneColour, toneFor, type Tone } from "./document.js";
 import {
-  badgeColours,
-  cardAttributes,
-  cardGroupAttributes,
   edgeAttributes,
   stylesFor,
 } from "./styles.js";
@@ -33,17 +31,14 @@ import {
 import {
   BADGE_GAP,
   BADGE_HEIGHT,
-  BADGE_RADIUS,
   BADGE_RISE,
   CARD_PADDING_X,
-  CARD_RADIUS,
   HERO_PULSE_COUNT,
   ICON_CHIP_GAP,
   ICON_CHIP_RADIUS,
   ICON_CHIP_SIZE,
   LANE_HEADER_BASELINE,
   LANE_PADDING_X,
-  LANE_RADIUS,
   SUBTITLE_SIZE,
 } from "../design.js";
 
@@ -52,7 +47,6 @@ const badgeTone = (node: GraphNode, text: string): Tone =>
 
 /** The badge row, laid left to right across the strip the layout reserved. */
 const paintBadges = (placed: PlacedNode, palette: Palette): string => {
-  const styles = stylesFor(palette);
   const row = badgeRow(placed);
   if (row === undefined) return "";
 
@@ -60,31 +54,7 @@ const paintBadges = (placed: PlacedNode, palette: Palette): string => {
   return lines(
     row.badges.map((text) => {
       const width = badgeWidth(text);
-      const colours = badgeColours(badgeTone(placed.node, text), palette);
-      const painted = wrap(
-        "g",
-        { class: `bdg bdg-${badgeTone(placed.node, text)}` },
-        tag("rect", {
-          x: coord(x),
-          y: coord(row.box.y),
-          width: coord(width),
-          height: BADGE_HEIGHT,
-          rx: BADGE_RADIUS,
-          fill: colours.fill,
-          stroke: colours.stroke,
-          "stroke-width": 1,
-        }) +
-          textNode(
-            {
-              x: coord(x + width / 2),
-              y: coord(row.box.y + BADGE_HEIGHT / 2 + 3),
-              "text-anchor": "middle",
-              ...styles.badgeText,
-              fill: colours.text,
-            },
-            text,
-          ),
-      );
+      const painted = paintBadge(text, { x, y: row.box.y, width, height: BADGE_HEIGHT }, badgeTone(placed.node, text), palette);
       x += width + BADGE_GAP;
       return painted;
     }),
@@ -131,47 +101,36 @@ export const paintCard = (placed: PlacedNode, palette: Palette): string => {
       )
     : "";
 
-  const title = textNode(
+  const title = paintText(
     {
       class: node.delta === "removed" ? "ntitle strike" : "ntitle",
       x: coord(textX),
       y: coord(titleBaseline),
       "font-size": titleSize,
-      ...styles.title,
-      "text-decoration": node.delta === "removed" ? "line-through" : undefined,
     },
-    truncate(node.label, "sans-bold", titleSize, textWidth),
+    truncate(node.label, "sans-bold", titleSize, textWidth), "title", palette, { "text-decoration": node.delta === "removed" ? "line-through" : undefined },
   );
 
   const subtitle =
     node.subtitle === undefined
       ? ""
-      : textNode(
-          { class: "nsub", x: coord(textX), y: coord(box.y + 45), ...styles.subtitle },
-          truncate(node.subtitle, "mono", SUBTITLE_SIZE, textWidth),
+      : paintText(
+          { class: "nsub", x: coord(textX), y: coord(box.y + 45) },
+          truncate(node.subtitle, "mono", SUBTITLE_SIZE, textWidth), "subtitle", palette,
         );
 
   const groupClass =
     node.delta === "removed" ? "cardsh ghost" : node.delta === "unchanged" ? "cardsh context" : "cardsh";
 
-  return wrap(
-    "g",
-    { class: groupClass, ...cardGroupAttributes(node.delta, palette) },
+  return paintCardGroup(
+    node.delta, palette,
     lines([
-      tag("rect", {
-        class: cardOutlineClass(node),
-        x: coord(box.x),
-        y: coord(box.y),
-        width: coord(box.width),
-        height: coord(box.height),
-        rx: CARD_RADIUS,
-        ...cardAttributes(node.delta, palette),
-      }),
+      paintCardSurface(box, node.delta, palette, { class: cardOutlineClass(node) }),
       chip,
       title,
       subtitle,
       paintBadges(placed, palette),
-    ]),
+    ]), { class: groupClass },
   );
 };
 
@@ -227,33 +186,7 @@ const paintEdge = (
   };
 };
 
-export const paintLabelPill = (text: string, box: Box, tone: Tone, palette: Palette): string => {
-  const styles = stylesFor(palette);
-  return wrap(
-    "g",
-    {},
-    tag("rect", {
-      class: "lpill",
-      x: coord(box.x),
-      y: coord(box.y),
-      width: coord(box.width),
-      height: coord(box.height),
-      rx: box.height / 2,
-      ...styles.pill,
-    }) +
-      textNode(
-        {
-          class: tone === "neutral" ? "ltext" : `ltext ltext-${tone}`,
-          x: coord(box.x + box.width / 2),
-          y: coord(box.y + box.height / 2 + 3.5),
-          "text-anchor": "middle",
-          ...styles.pillText,
-          fill: badgeColours(tone, palette).text,
-        },
-        text,
-      ),
-  );
-};
+export { paintLabelPill } from "./components.js";
 
 export type ArchitecturePainting = {
   width: number;
@@ -268,7 +201,6 @@ export const paintArchitecture = (
   palette: Palette,
 ): ArchitecturePainting => {
   const { layout, routed, pills } = relieveCongestion(graph, hints);
-  const styles = stylesFor(palette);
   const drawn: Box[] = occupiedBoxes(layout.nodes);
 
   const edgeMarkup: string[] = [];
@@ -283,18 +215,10 @@ export const paintArchitecture = (
 
   const lanes = layout.lanes.map(({ lane, box }) =>
     lines([
-      tag("rect", {
-        class: "lanebox",
-        x: coord(box.x),
-        y: coord(box.y),
-        width: coord(box.width),
-        height: coord(box.height),
-        rx: LANE_RADIUS,
-        ...styles.lane,
-      }),
-      textNode(
-        { class: "lanelabel", x: coord(box.x + LANE_PADDING_X), y: LANE_HEADER_BASELINE, ...styles.laneLabel },
-        laneHeaderText(lane),
+      paintLaneSurface(box, palette, { class: "lanebox" }),
+      paintText(
+        { class: "lanelabel", x: coord(box.x + LANE_PADDING_X), y: LANE_HEADER_BASELINE },
+        laneHeaderText(lane), "laneLabel", palette,
       ),
     ]),
   );

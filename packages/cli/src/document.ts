@@ -1,5 +1,7 @@
 import {
   assertNever,
+  safeParseDiagramDoc,
+  type DiagramDoc,
   formatIssues,
   safeParseConfig,
   safeParseGraphDoc,
@@ -17,9 +19,10 @@ import { parse as parseYaml } from "yaml";
 import { PrLensCliError } from "./errors.js";
 import { readTextFile } from "./io.js";
 
-export type DocumentKind = "graph" | "patch" | "render-manifest" | "config";
+export type DocumentKind = "diagram" | "graph" | "patch" | "render-manifest" | "config";
 
 export type ValidatedDocument =
+  | { kind: "diagram"; document: DiagramDoc }
   | { kind: "graph"; document: GraphDoc }
   | { kind: "patch"; document: PatchDoc }
   | { kind: "render-manifest"; document: RenderManifest }
@@ -27,6 +30,8 @@ export type ValidatedDocument =
 
 export const describeDocumentKind = (kind: DocumentKind): string => {
   switch (kind) {
+    case "diagram":
+      return "diagram document";
     case "graph":
       return "graph document";
     case "patch":
@@ -91,12 +96,12 @@ const documentKindOf = (path: string, value: unknown): DocumentKind => {
 
   const kind = "kind" in value ? value.kind : undefined;
   if (kind === undefined) return "config";
-  if (kind === "graph" || kind === "patch" || kind === "render-manifest") return kind;
+  if (kind === "diagram" || kind === "graph" || kind === "patch" || kind === "render-manifest") return kind;
 
   throw new PrLensCliError(
     "UNKNOWN_DOCUMENT",
     `${path} declares an unknown document kind ${JSON.stringify(kind)}`,
-    "expected 'graph', 'patch' or 'render-manifest' — or no 'kind' at all, for a config",
+    "expected 'diagram', 'graph', 'patch' or 'render-manifest' — or no 'kind' at all, for a config",
   );
 };
 
@@ -105,6 +110,8 @@ export const validateDocumentFile = async (path: string): Promise<ValidatedDocum
   const kind = documentKindOf(path, source);
 
   switch (kind) {
+    case "diagram":
+      return { kind, document: take(path, kind, safeParseDiagramDoc(source)) };
     case "graph":
       return { kind, document: take(path, kind, safeParseGraphDoc(source)) };
     case "patch":

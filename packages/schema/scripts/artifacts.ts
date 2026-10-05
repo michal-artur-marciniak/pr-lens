@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DiagramDoc } from "../src/diagram.js";
 import { Config } from "../src/config.js";
 import { GraphDoc, View } from "../src/graph.js";
 import { JsonValue } from "../src/primitives.js";
@@ -18,6 +19,7 @@ z.globalRegistry.add(View, { id: "View" });
 z.globalRegistry.add(JsonValue, { id: "JsonValue" });
 
 const documents = [
+  { file: "diagram-doc.schema.json", title: "PR Lens experimental diagram", schema: DiagramDoc },
   { file: "graph-doc.schema.json", title: "PR Lens graph document", schema: GraphDoc },
   { file: "patch-doc.schema.json", title: "PR Lens patch document", schema: PatchDoc },
   { file: "config.schema.json", title: "PR Lens repository config", schema: Config },

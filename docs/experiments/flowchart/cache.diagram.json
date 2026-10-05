@@ -1,0 +1,117 @@
+{
+  "schemaVersion": "0.1.0",
+  "kind": "diagram",
+  "title": "Cache hit and miss",
+  "summary": "A hit returns the cached value. A miss reads the database and fills the cache.",
+  "diagram": {
+    "kind": "flowchart",
+    "direction": "down",
+    "nodes": [
+      {
+        "id": "request",
+        "kind": "start",
+        "label": "Request",
+        "delta": "unchanged"
+      },
+      {
+        "id": "cache",
+        "kind": "process",
+        "label": "Read cache",
+        "delta": "unchanged"
+      },
+      {
+        "id": "check",
+        "kind": "decision",
+        "label": "Cache hit?",
+        "delta": "unchanged"
+      },
+      {
+        "id": "cached",
+        "kind": "process",
+        "label": "Return cached value",
+        "delta": "unchanged"
+      },
+      {
+        "id": "db",
+        "kind": "datastore",
+        "label": "Database",
+        "delta": "unchanged"
+      },
+      {
+        "id": "store",
+        "kind": "process",
+        "label": "Write cache",
+        "delta": "unchanged"
+      },
+      {
+        "id": "response",
+        "kind": "end",
+        "label": "Response",
+        "delta": "unchanged"
+      }
+    ],
+    "edges": [
+      {
+        "id": "lookup",
+        "from": "request",
+        "to": "cache"
+      },
+      {
+        "id": "check-cache",
+        "from": "cache",
+        "to": "check"
+      },
+      {
+        "id": "hit",
+        "from": "check",
+        "to": "cached",
+        "label": "yes"
+      },
+      {
+        "id": "miss",
+        "from": "check",
+        "to": "db",
+        "label": "no"
+      },
+      {
+        "id": "write",
+        "from": "db",
+        "to": "store",
+        "label": "result"
+      },
+      {
+        "id": "cached-response",
+        "from": "cached",
+        "to": "response"
+      },
+      {
+        "id": "stored-response",
+        "from": "store",
+        "to": "response"
+      }
+    ],
+    "scenarios": [
+      {
+        "id": "cache-hit",
+        "label": "Cache hit",
+        "path": [
+          "lookup",
+          "check-cache",
+          "hit",
+          "cached-response"
+        ]
+      },
+      {
+        "id": "cache-miss",
+        "label": "Cache miss",
+        "path": [
+          "lookup",
+          "check-cache",
+          "miss",
+          "write",
+          "stored-response"
+        ]
+      }
+    ]
+  }
+}

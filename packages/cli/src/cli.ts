@@ -1,5 +1,6 @@
 import { assertNever } from "@coldtea/pr-lens-schema";
 
+import { diagramCommand, USAGE as DIAGRAM_USAGE } from "./commands/diagram.js";
 import { CLI_VERSION } from "./version.js";
 import type { Terminal } from "./terminal.js";
 import { formatError, PrLensCliError } from "./errors.js";
@@ -12,7 +13,7 @@ import { analyzeCommand, USAGE as ANALYZE_USAGE } from "./commands/analyze.js";
 import { commentCommand, USAGE as COMMENT_USAGE } from "./commands/comment.js";
 import { USAGE as VALIDATE_USAGE, validateCommand } from "./commands/validate.js";
 
-const COMMANDS = ["analyze", "render", "comment", "validate", "export", "canvas", "auth", "skill"] as const;
+const COMMANDS = ["diagram", "analyze", "render", "comment", "validate", "export", "canvas", "auth", "skill"] as const;
 type CommandName = (typeof COMMANDS)[number];
 
 const isCommand = (value: string): value is CommandName =>
@@ -20,6 +21,7 @@ const isCommand = (value: string): value is CommandName =>
 
 const HELP = `pr-lens — review what actually matters
 
+  pr-lens diagram   <diagram.json>          a native experimental diagram as SVG
   pr-lens analyze   --base <ref>            a diff, read by your own model, as a graph document
   pr-lens render    <graph.json>            that document, as light and dark SVGs
   pr-lens comment   --graph --manifest      the pull request comment, as markdown
@@ -38,6 +40,8 @@ name. https://github.com/coldteadotai/pr-lens`;
 
 const usageFor = (command: CommandName): string => {
   switch (command) {
+    case "diagram":
+      return DIAGRAM_USAGE;
     case "analyze":
       return ANALYZE_USAGE;
     case "render":
@@ -66,6 +70,8 @@ const dispatch = (
   env: Record<string, string | undefined>,
 ): Promise<void> => {
   switch (command) {
+    case "diagram":
+      return diagramCommand(args, terminal);
     case "analyze":
       return analyzeCommand(args, terminal, env);
     case "render":
