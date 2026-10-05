@@ -4,7 +4,7 @@ import { CARD_HEIGHT, CARD_RADIUS, ROW_GAP } from "../design.js";
 import { cardAttributes, cardGroupAttributes, stylesFor } from "./styles.js";
 import { measure } from "../text.js";
 import type { Palette } from "../theme.js";
-import { diagramColour, diagramDelta, diagramLabel, diagramText, timedPulse } from "./diagram-primitives.js";
+import { diagramColour, diagramDelta, diagramLabel, diagramText, roundedDiagramRoute, timedPulse } from "./diagram-primitives.js";
 import { markerFor, toneFor } from "./document.js";
 import { escapeXml, tag, wrap } from "./primitives.js";
 
@@ -73,10 +73,10 @@ export const paintFlowchart = (diagram: FlowchartDiagram, palette: Palette, path
     const back = backEdges.has(edge.id) || (down ? ty <= sy : tx <= sx);
     const middle = down ? (ty - sy > height + ROW_GAP ? ty - 28 : (sy + ty) / 2) : (sx + tx) / 2;
     const corridor = down ? 22 + index * 3 : 25 + index * 3;
-    const route = back
+    const route = roundedDiagramRoute(back
       ? down ? `M${sx},${sy} L${sx},${sy + 22} L${corridor},${sy + 22} L${corridor},${ty - 20} L${tx},${ty - 20} L${tx},${ty}`
         : `M${sx},${sy} L${sx + 22},${sy} L${sx + 22},${corridor} L${tx - 20},${corridor} L${tx - 20},${ty} L${tx},${ty}`
-      : down ? `M${sx},${sy} L${sx},${middle} L${tx},${middle} L${tx},${ty}` : `M${sx},${sy} L${middle},${sy} L${middle},${ty} L${tx},${ty}`;
+      : down ? `M${sx},${sy} L${sx},${middle} L${tx},${middle} L${tx},${ty}` : `M${sx},${sy} L${middle},${sy} L${middle},${ty} L${tx},${ty}`);
     elements[edge.id] = { x: Math.min(sx, tx, back && down ? corridor : sx), y: Math.min(sy, ty, back && !down ? corridor : sy), width: Math.max(sx, tx) - Math.min(sx, tx, back && down ? corridor : sx) + (back && !down ? 22 : 4), height: Math.max(sy, ty) - Math.min(sy, ty, back && !down ? corridor : sy) + (back && down ? 22 : 4) };
     bodies.push(wrap("g", { "data-element": edge.id }, tag("path", { d: route, fill: "none", stroke: edge.delta === "unchanged" ? palette.edge : diagramColour(edge.delta, palette), "stroke-width": 1.5, "marker-end": markerFor(toneFor(edge.delta)), "stroke-dasharray": edge.delta === "removed" ? "5 4" : undefined }) +
       (edge.label === undefined ? "" : diagramLabel(edge.label, down ? (back ? corridor + 20 : (sx + tx) / 2) : (back ? (sx + tx) / 2 : middle), down ? middle - 6 : (back ? corridor - 6 : (sy + ty) / 2 - 6), palette))));
