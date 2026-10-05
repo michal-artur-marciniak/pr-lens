@@ -8,6 +8,8 @@ it("expands retries into deterministic executed traces and retains the static st
   const fast = renderDiagram(doc, { theme: "light", playback: { kind: "scenario", scenario: "fast-success" } });
   const retry = renderDiagram(doc, { theme: "dark", playback: { kind: "scenario", scenario: "retry-success" } });
   expect(retry.height).toBeGreaterThan(fast.height);
+  expect(Object.keys(retry.atlas.occurrences ?? {}).filter((id) => id.startsWith("event-"))).toHaveLength(8);
+  expect(retry.atlas.occurrences?.["event-3"]?.y).toBeGreaterThan(retry.atlas.occurrences?.["event-1"]?.y ?? 0);
   expect(fast.svg.match(/<animateMotion/g)).toHaveLength(4);
   expect(retry.svg.match(/<animateMotion/g)).toHaveLength(8);
   expect(retry.svg.match(/data-element="attempt"/g)?.length).toBe(3);
