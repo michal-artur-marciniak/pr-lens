@@ -35,6 +35,6 @@ export const renderDiagram = (doc: DiagramDoc, options: DiagramRenderOptions): D
     ...painted,
     animated: scenario !== undefined,
     svg: svgDocument({ ...painted, palette, title: doc.title, description: doc.summary,
-      body: `<style>@media(prefers-reduced-motion:reduce){.diagram-motion{display:none}}</style>` + diagramText(doc.title, 24, 28, palette, 16, "start") + (scenario === undefined ? "" : diagramText(scenario.label, 24, 48, palette, 11, "start")) + painted.body }),
+      body: `<style>@media(prefers-reduced-motion:reduce){.diagram-motion{display:none}}</style>` + diagramText(doc.title, 24, 28, palette, "heading", "start") + (scenario === undefined ? "" : diagramText(scenario.label, 24, 48, palette, "caption", "start")) + painted.body }),
   };
 };
