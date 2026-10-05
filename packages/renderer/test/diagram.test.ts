@@ -65,3 +65,15 @@ it("preserves delta colour on a selected changed edge", () => {
   expect(svg).toMatch(/data-element="hit" data-selected="true"><path[^>]*stroke="#1f883d"/);
   expect(svg).toMatch(/data-element="hit" data-selected="true">[^]*?<path[^>]*stroke="#0969da"[^>]*stroke-width="7"/);
 });
+
+it("wraps long delivery labels and keeps the return route in the canvas", () => {
+  const delivery = parseDiagramDoc(JSON.parse(readFileSync(new URL("../../../docs/experiments/flowchart/delivery.diagram.json", import.meta.url), "utf8")));
+  const picture = renderDiagram(delivery, { theme: "light", playback: { kind: "scenario", scenario: "retry-delivery" } });
+  expect(picture.width).toBeLessThanOrEqual(760);
+  expect(picture.atlas.elements.send?.width).toBeLessThanOrEqual(260);
+  expect(picture.atlas.elements.send?.height).toBeGreaterThan(52);
+  const route = picture.atlas.elements.again;
+  if (route === undefined) throw new Error("missing return route");
+  expect(route.x).toBeGreaterThanOrEqual(0);
+  expect(route.x + route.width).toBeLessThanOrEqual(picture.width);
+});
