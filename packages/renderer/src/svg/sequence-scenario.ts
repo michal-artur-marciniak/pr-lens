@@ -102,8 +102,9 @@ export const paintSequenceScenario = (diagram: SequenceDiagram, palette: Palette
     arrows.push(wrap("g", { "data-element": message.id, "data-event": index, "data-start": event.start }, tag("path", { d: path, ...messageAttributes(message, palette), "marker-end": marker })));
     labels.push(diagramLabel(message.label, labelX, labelY, palette));
     labels.push(timedFocus(diagramLabel(message.label, labelX, labelY, { ...palette, pill: palette.neutralFill, pillBorder: palette.selection, muted: palette.selection }), event.start, event.duration, cycle, `event-${index}`));
-    for (const visit of timeline.repeats.filter((visit) => repeatMessages.get(visit.id)?.has(message.id) && visit.start <= event.start && event.start < visit.start + visit.duration))
-      labels.push(timedFocus(paintText({ x: labelX, y: labelY - 19, "text-anchor": "middle" }, `Attempt ${visit.iteration}/${visit.total}`, "caption", palette, { "font-size": 9, fill: palette.selection }), event.start, event.duration, cycle, `attempt-${index}-${visit.id}`));
+    const attempts = timeline.repeats.filter((visit) => repeatMessages.get(visit.id)?.has(message.id) && visit.start <= event.start && event.start < visit.start + visit.duration);
+    if (attempts.length > 0)
+      labels.push(timedFocus(paintText({ x: labelX, y: labelY - 19, "text-anchor": "middle" }, `Attempt ${attempts.map((visit) => `${visit.iteration}/${visit.total}`).join(" · ")}`, "caption", palette, { "font-size": 9, fill: palette.selection }), event.start, event.duration, cycle, `attempt-${index}`));
     arrows.push(timedRouteHighlight(path, event.start, event.start + event.duration, cycle, message.delta, palette), timedPulse(path, event.start, event.duration, cycle, palette.selection));
   }
   return { width, height, body: [...frames, ...lines, ...headers, ...arrows, ...labels].join(""), atlas: { elements, occurrences } };
