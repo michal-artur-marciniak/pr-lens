@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SequenceStep } from "../src/sequence-diagram.js";
 import { DiagramDoc } from "../src/diagram.js";
 import { Config } from "../src/config.js";
 import { GraphDoc, View } from "../src/graph.js";
@@ -15,6 +16,7 @@ const BASE_ID =
 // The drill-down tree and a JSON value are recursive, so they land in $defs;
 // without an id each would be published under a generated name that changes
 // with the schema.
+z.globalRegistry.add(SequenceStep, { id: "SequenceStep" });
 z.globalRegistry.add(View, { id: "View" });
 z.globalRegistry.add(JsonValue, { id: "JsonValue" });
 

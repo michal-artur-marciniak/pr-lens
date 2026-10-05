@@ -1,0 +1,139 @@
+{
+  "schemaVersion": "0.2.0",
+  "kind": "diagram",
+  "title": "Fetch account and billing in parallel",
+  "diagram": {
+    "kind": "sequence",
+    "participants": [
+      {
+        "id": "client",
+        "label": "Client"
+      },
+      {
+        "id": "api",
+        "label": "API"
+      },
+      {
+        "id": "account",
+        "label": "Account"
+      },
+      {
+        "id": "billing",
+        "label": "Billing"
+      }
+    ],
+    "messages": [
+      {
+        "id": "request",
+        "from": "client",
+        "to": "api",
+        "label": "GET /dashboard",
+        "kind": "sync"
+      },
+      {
+        "id": "get-account",
+        "from": "api",
+        "to": "account",
+        "label": "Fetch account",
+        "kind": "sync"
+      },
+      {
+        "id": "account-result",
+        "from": "account",
+        "to": "api",
+        "label": "Account ready",
+        "kind": "return"
+      },
+      {
+        "id": "get-billing",
+        "from": "api",
+        "to": "billing",
+        "label": "Fetch billing",
+        "kind": "sync"
+      },
+      {
+        "id": "compute",
+        "from": "billing",
+        "to": "billing",
+        "label": "Compute fees",
+        "kind": "self"
+      },
+      {
+        "id": "billing-result",
+        "from": "billing",
+        "to": "api",
+        "label": "Billing ready",
+        "kind": "return"
+      },
+      {
+        "id": "response",
+        "from": "api",
+        "to": "client",
+        "label": "Dashboard",
+        "kind": "return"
+      }
+    ],
+    "steps": [
+      {
+        "id": "step-request",
+        "kind": "message",
+        "message": "request"
+      },
+      {
+        "id": "fetch-both",
+        "kind": "parallel",
+        "label": "Wait for both results",
+        "branches": [
+          {
+            "id": "account-branch",
+            "label": "Account",
+            "steps": [
+              {
+                "id": "step-get-account",
+                "kind": "message",
+                "message": "get-account"
+              },
+              {
+                "id": "step-account-result",
+                "kind": "message",
+                "message": "account-result"
+              }
+            ]
+          },
+          {
+            "id": "billing-branch",
+            "label": "Billing",
+            "steps": [
+              {
+                "id": "step-get-billing",
+                "kind": "message",
+                "message": "get-billing"
+              },
+              {
+                "id": "step-compute",
+                "kind": "message",
+                "message": "compute"
+              },
+              {
+                "id": "step-billing-result",
+                "kind": "message",
+                "message": "billing-result"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "step-response",
+        "kind": "message",
+        "message": "response"
+      }
+    ],
+    "scenarios": [
+      {
+        "id": "dashboard",
+        "label": "Concurrent requests, then one response"
+      }
+    ]
+  }
+}
