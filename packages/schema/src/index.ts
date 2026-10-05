@@ -125,3 +125,5 @@ export {
 export { assertNever } from "./utils.js";
 export * from "./diagram.js";
 export * from "./sequence-diagram.js";
+
+export * from "./entity-relationship-diagram.js";

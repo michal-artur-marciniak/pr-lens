@@ -1,0 +1,97 @@
+{
+  "schemaVersion": "0.3.0",
+  "kind": "diagram",
+  "title": "Cardinality examples",
+  "summary": "Schema migration: customer relation replaces duplicated email.",
+  "diagram": {
+    "kind": "entity-relationship",
+    "entities": [
+      {
+        "id": "customers",
+        "label": "Customers",
+        "fields": [
+          {
+            "id": "customer-id",
+            "label": "id",
+            "type": "uuid",
+            "keys": [
+              "PK"
+            ]
+          },
+          {
+            "id": "email",
+            "label": "email",
+            "type": "varchar(255)"
+          }
+        ]
+      },
+      {
+        "id": "orders",
+        "label": "Orders",
+        "fields": [
+          {
+            "id": "order-id",
+            "label": "id",
+            "type": "uuid",
+            "keys": [
+              "PK"
+            ]
+          },
+          {
+            "id": "customer-fk",
+            "label": "customer_id",
+            "type": "uuid",
+            "keys": [
+              "FK"
+            ]
+          },
+          {
+            "id": "required-fk",
+            "label": "required_owner",
+            "type": "uuid",
+            "keys": [
+              "FK"
+            ]
+          },
+          {
+            "id": "optional-fk",
+            "label": "optional_owner",
+            "type": "uuid",
+            "keys": [
+              "FK"
+            ]
+          }
+        ]
+      }
+    ],
+    "relations": [
+      {
+        "id": "required-many",
+        "from": {
+          "entity": "customers",
+          "field": "customer-id",
+          "cardinality": "one"
+        },
+        "to": {
+          "entity": "orders",
+          "field": "required-fk",
+          "cardinality": "one-or-many"
+        }
+      },
+      {
+        "id": "optional-one",
+        "from": {
+          "entity": "customers",
+          "field": "email",
+          "cardinality": "zero-or-one"
+        },
+        "to": {
+          "entity": "orders",
+          "field": "optional-fk",
+          "cardinality": "one"
+        }
+      }
+    ],
+    "scenarios": []
+  }
+}

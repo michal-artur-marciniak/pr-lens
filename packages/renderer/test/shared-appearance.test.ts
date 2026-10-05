@@ -15,6 +15,7 @@ describe("shared architecture and native appearance", () => {
     const families = [
       { name: "flowchart", diagram: { kind: "flowchart", nodes: [{ id: "node", kind: "process", label: "GET /health", delta }] } },
       { name: "sequence", diagram: { kind: "sequence", participants: [{ id: "node", label: "GET /health", delta }, { id: "other", label: "Other" }], messages: [{ id: "request", from: "node", to: "other", label: "Call" }], steps: [{ id: "step", kind: "message", message: "request" }] } },
+      { name: "entity-relationship", diagram: { kind: "entity-relationship", entities: [{ id: "node", label: "GET /health", delta, fields: [{ id: "field", label: "id", type: "uuid" }] }, { id: "other", label: "Other", fields: [{ id: "other-field", label: "id", type: "uuid" }] }] } },
     ];
     for (const family of families) it(`shares ${family.name} card and badge appearance for ${delta} in ${theme}`, () => {
       const graph = { ...minimalGraph, nodes: minimalGraph.nodes.map((node) => ({ ...node, delta })) };
