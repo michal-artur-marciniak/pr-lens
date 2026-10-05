@@ -40,3 +40,25 @@ export const timedPulse = (path: string, start: number, duration: number, cycle:
     tag("animateMotion", { path, dur: `${cycle}s`, repeatCount: "indefinite", keyTimes: keys.join(";"), keyPoints: positions.join(";"), calcMode: "linear" }) +
     tag("animate", { attributeName: "opacity", dur: `${cycle}s`, repeatCount: "indefinite", keyTimes: keys.join(";"), values: visible.join(";"), calcMode: "discrete" })));
 };
+
+export const roundedDiagramRoute = (route: string): string => {
+  const points = Array.from(route.matchAll(/[ML]([\d.-]+),([\d.-]+)/g), (match) => ({ x: Number(match[1]), y: Number(match[2]) }));
+  const first = points[0];
+  if (first === undefined || points.length < 3) return route;
+  let result = `M${first.x},${first.y}`;
+  for (let i = 1; i < points.length - 1; i++) {
+    const before = points[i - 1];
+    const point = points[i];
+    const after = points[i + 1];
+    if (before === undefined || point === undefined || after === undefined) continue;
+    const incoming = Math.hypot(point.x - before.x, point.y - before.y);
+    const outgoing = Math.hypot(after.x - point.x, after.y - point.y);
+    const radius = Math.min(7, incoming / 2, outgoing / 2);
+    if (radius === 0) continue;
+    const entry = { x: point.x + (before.x - point.x) * radius / incoming, y: point.y + (before.y - point.y) * radius / incoming };
+    const exit = { x: point.x + (after.x - point.x) * radius / outgoing, y: point.y + (after.y - point.y) * radius / outgoing };
+    result += ` L${entry.x},${entry.y} Q${point.x},${point.y} ${exit.x},${exit.y}`;
+  }
+  const last = points.at(-1);
+  return last === undefined ? result : `${result} L${last.x},${last.y}`;
+};
