@@ -12,9 +12,13 @@ const appearance = (markup: string | undefined, keepDimensions = false) => {
 // Compare public renders so a native diagram cannot silently acquire a second card or badge style.
 describe("shared architecture and native appearance", () => {
   for (const theme of THEMES) for (const delta of ["added", "modified", "removed", "unchanged"] as const) {
-    it(`shares card and badge appearance for ${delta} in ${theme}`, () => {
+    const families = [
+      { name: "flowchart", diagram: { kind: "flowchart", nodes: [{ id: "node", kind: "process", label: "GET /health", delta }] } },
+      { name: "sequence", diagram: { kind: "sequence", participants: [{ id: "node", label: "GET /health", delta }, { id: "other", label: "Other" }], messages: [{ id: "request", from: "node", to: "other", label: "Call" }], steps: [{ id: "step", kind: "message", message: "request" }] } },
+    ];
+    for (const family of families) it(`shares ${family.name} card and badge appearance for ${delta} in ${theme}`, () => {
       const graph = { ...minimalGraph, nodes: minimalGraph.nodes.map((node) => ({ ...node, delta })) };
-      const doc = parseDiagramDoc({ kind: "diagram", schemaVersion: "0.1.0", title: "Native", diagram: { kind: "flowchart", nodes: [{ id: "node", kind: "process", label: "GET /health", delta }] } });
+      const doc = parseDiagramDoc({ kind: "diagram", schemaVersion: "0.1.0", title: "Native", diagram: family.diagram });
       const original = render(graph, { lens: "architecture", theme }).svg;
       const native = renderDiagram(doc, { theme }).svg;
       expect(appearance(native.match(/<g data-element="node"[^>]*><rect([^>]*)\/>/)?.[1])).toEqual(appearance(original.match(/<rect class="card(?: card-[^"]+)?"([^>]*)\/>/)?.[1]));
