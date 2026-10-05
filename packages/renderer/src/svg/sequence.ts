@@ -1,7 +1,7 @@
 import { assertNever, compileSequence, type SequenceDiagram, type SequenceScenario, type SequenceStep } from "@coldtea/pr-lens-schema";
 import type { Box } from "../geometry.js";
-import { CARD_RADIUS } from "../design.js";
-import { cardAttributes, cardGroupAttributes } from "./styles.js";
+import { messageAttributes } from "./styles.js";
+import { paintActivation, paintCardGroup, paintCardSurface, paintLaneSurface, paintLifeline } from "./components.js";
 import { measure } from "../text.js";
 import type { Palette } from "../theme.js";
 import { diagramColour, diagramDelta, diagramLabel, diagramText, timedPulse } from "./diagram-primitives.js";
@@ -22,7 +22,7 @@ export const paintSequence = (diagram: SequenceDiagram, palette: Palette, scenar
     const centre = box.x + box.width / 2;
     elements[participant.id] = box;
     centres.set(participant.id, centre);
-    headers.push(wrap("g", { "data-element": participant.id, ...cardGroupAttributes(participant.delta, palette) }, tag("rect", { ...box, rx: CARD_RADIUS, ...cardAttributes(participant.delta, palette) }) + diagramText(participant.label, centre, 100, palette) + diagramDelta(participant.delta, box, palette)));
+    headers.push(paintCardGroup(participant.delta, palette, paintCardSurface(box, participant.delta, palette) + diagramText(participant.label, centre, 100, palette) + diagramDelta(participant.delta, box, palette), { "data-element": participant.id }));
   });
   const layout = (steps: readonly SequenceStep[], top: number, depth: number): number => {
     let y = top;
@@ -38,7 +38,7 @@ export const paintSequence = (diagram: SequenceDiagram, palette: Palette, scenar
         case "choice": case "parallel":
           y += 32;
           for (const branch of step.branches) {
-            frames.push(diagramText(branch.label, 35 + depth * 10, y + 14, palette, 11, "start"));
+            frames.push(diagramText(branch.label, 35 + depth * 10, y + 14, palette, "caption", "start"));
             const branchTop = y;
             y = layout(branch.steps, y + 22, depth + 1);
             elements[branch.id] = { x: 30 + depth * 10, y: branchTop, width: width - 60 - depth * 20, height: y - branchTop };
@@ -51,13 +51,16 @@ export const paintSequence = (diagram: SequenceDiagram, palette: Palette, scenar
       if (step.kind !== "message") {
         const box = { x: 20 + depth * 10, y: start, width: width - 40 - depth * 20, height: y - start };
         elements[step.id] = box;
-        frames.unshift(tag("rect", { ...box, rx: 10, fill: palette.lane, stroke: palette.cardBorder }) + diagramText(`${step.kind}: ${step.label}`, box.x + 8, box.y + 20, palette, 11, "start"));
+        frames.unshift(paintLaneSurface(box, palette, { stroke: palette.cardBorder }) + diagramText(`${step.kind}: ${step.label}`, box.x + 8, box.y + 20, palette, "caption", "start"));
       }
     }
     return y;
   };
   const height = layout(diagram.steps, 160, 0) + 44;
-  const lines = diagram.participants.map((participant) => tag("line", { x1: centres.get(participant.id), x2: centres.get(participant.id), y1: 118, y2: height - 22, stroke: palette.lifeline, "stroke-dasharray": "4 4" }));
+  const lines = diagram.participants.map((participant) => {
+    const centre = centres.get(participant.id);
+    return centre === undefined ? "" : paintLifeline(centre, 118, height - 22, palette);
+  });
   const timeline = scenario === undefined ? undefined : compileSequence(diagram, scenario);
   const arrows: string[] = [];
   for (const message of diagram.messages) {
@@ -77,8 +80,8 @@ export const paintSequence = (diagram: SequenceDiagram, palette: Palette, scenar
     }
     const matchingReturn = diagram.messages.find((candidate) => candidate.kind === "return" && candidate.from === message.to && candidate.to === message.from && (rows.get(candidate.id) ?? 0) > y);
     const returnY = matchingReturn === undefined ? undefined : rows.get(matchingReturn.id);
-    if (message.kind === "sync" && returnY !== undefined) arrows.push(tag("rect", { x: x2 - 4, y, width: 8, height: returnY - y, fill: palette.chip, stroke: palette.cardBorder }));
-    arrows.push(wrap("g", { "data-element": message.id }, tag("path", { d: path, fill: "none", stroke: message.delta === "unchanged" ? palette.edge : diagramColour(message.delta, palette), "stroke-width": 1.5, "stroke-dasharray": message.kind === "return" || message.delta === "removed" ? "5 4" : undefined, "marker-end": marker }) + diagramLabel(message.label, self ? x1 + 45 + measure(message.label, "sans-bold", 9.5) / 2 : (x1 + x2) / 2, y - 8, palette)));
+    if (message.kind === "sync" && returnY !== undefined) arrows.push(paintActivation({ x: x2 - 4, y, width: 8, height: returnY - y }, palette, "neutral"));
+    arrows.push(wrap("g", { "data-element": message.id }, tag("path", { d: path, ...messageAttributes(message, palette), "marker-end": marker }) + diagramLabel(message.label, self ? x1 + 45 + measure(message.label, "sans-bold", 9.5) / 2 : (x1 + x2) / 2, y - 8, palette)));
     for (const event of timeline?.events ?? []) if (event.message === message.id)
       arrows.push(timedPulse(path, event.start, event.duration, (timeline?.duration ?? 0) + 1, message.delta === "unchanged" ? palette.edge : diagramColour(message.delta, palette)));
   }

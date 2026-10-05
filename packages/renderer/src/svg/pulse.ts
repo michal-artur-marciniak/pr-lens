@@ -1,6 +1,6 @@
 import { HERO_PULSE_DURATION, PULSE_DURATION } from "../design.js";
 import { coord } from "../geometry.js";
-import { lines, tag, wrap } from "./primitives.js";
+import { lines, tag, wrap, type Attributes } from "./primitives.js";
 
 /**
  * The travelling pulse: the mark that says a connection carries traffic
@@ -18,6 +18,9 @@ import { lines, tag, wrap } from "./primitives.js";
 export const PULSE_RADIUS = 2.6;
 export const TRAIN_RADIUS = 3;
 
+export const paintPulse = (colour: string, animation: string, attributes: Attributes = {}): string =>
+  wrap("circle", { r: PULSE_RADIUS, fill: colour, ...attributes }, animation);
+
 export const travellingPulses = (pulse: {
   path: string;
   colour: string;
@@ -33,15 +36,14 @@ export const travellingPulses = (pulse: {
   return lines(
     Array.from({ length: count }, (_, index) => {
       const behind = (lag + (duration / count) * index) % duration;
-      return wrap(
-        "circle",
-        { r: train ? TRAIN_RADIUS : PULSE_RADIUS, fill: colour },
+      return paintPulse(
+        colour,
         tag("animateMotion", {
           dur: `${coord(duration)}s`,
           begin: behind === 0 ? undefined : `${coord(behind - duration)}s`,
           repeatCount: "indefinite",
           path,
-        }),
+        }), { r: train ? TRAIN_RADIUS : PULSE_RADIUS },
       );
     }),
   );

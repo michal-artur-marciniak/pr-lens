@@ -9,6 +9,8 @@ import { toneColour, toneFor, type Tone } from "./document.js";
 export const stylesFor = (palette: Palette) => ({
   lane: { fill: palette.lane },
   laneLabel: { "font-size": 10, "font-weight": 700, "letter-spacing": ".12em", fill: palette.muted },
+  heading: { "font-size": 16, "font-weight": 600, fill: palette.foreground },
+  caption: { "font-size": 11, fill: palette.muted },
   title: { "font-weight": 600, fill: palette.foreground },
   subtitle: { "font-size": 9.5, fill: palette.muted, "font-family": MONO_STACK },
   chip: { fill: palette.chip },
@@ -19,6 +21,7 @@ export const stylesFor = (palette: Palette) => ({
   pill: { fill: palette.pill, stroke: palette.pillBorder, "stroke-width": 1 },
   pillText: { "font-size": 9.5, "font-weight": 600 },
   lifeline: { stroke: palette.lifeline, "stroke-width": 1, "stroke-dasharray": "3 4" },
+  neutralActivation: { fill: palette.chip, stroke: palette.cardBorder },
   activation: { fill: palette.addedFill, stroke: palette.addedBorder },
 });
 
@@ -79,7 +82,7 @@ export const badgeColours = (tone: Tone, palette: Palette) => {
   }
 };
 
-const strokeAttributes = (delta: Delta, palette: Palette): Attributes => ({
+export const connectionAttributes = (delta: Delta, palette: Palette): Attributes => ({
   fill: "none",
   stroke: toneColour(palette, toneFor(delta)),
   "stroke-width": 1.5,
@@ -89,7 +92,7 @@ const strokeAttributes = (delta: Delta, palette: Palette): Attributes => ({
 
 export const edgeAttributes = (edge: GraphEdge, palette: Palette): Attributes => {
   const attributes = {
-    ...strokeAttributes(edge.delta, palette),
+    ...connectionAttributes(edge.delta, palette),
     ...(edge.delta === "unchanged" ? { opacity: 0.82 } : {}),
   };
   switch (edge.emphasis) {
@@ -104,9 +107,9 @@ export const edgeAttributes = (edge: GraphEdge, palette: Palette): Attributes =>
   }
 };
 
-export const messageAttributes = (message: FlowMessage, palette: Palette): Attributes => {
+export const messageAttributes = (message: Pick<FlowMessage, "delta" | "kind">, palette: Palette): Attributes => {
   const attributes = {
-    ...strokeAttributes(message.delta, palette),
+    ...connectionAttributes(message.delta, palette),
     "stroke-width": message.delta === "added" ? 2.25 : 1.5,
   };
   switch (message.kind) {
