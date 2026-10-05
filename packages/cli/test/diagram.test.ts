@@ -24,3 +24,14 @@ test("rejects an unknown scenario without writing an output", async () => {
   expect(errors.join("\n")).toContain("UNKNOWN_SCENARIO");
   expect(await readdir(parent)).toEqual([]);
 });
+
+test.each([
+  ["sequence/retry", "retry-success"],
+  ["entity-relationship/migration", "migration"],
+])("exports %s through the public CLI", async (name, scenario) => {
+  const file = new URL(`../../../docs/experiments/${name}.diagram.json`, import.meta.url).pathname;
+  const out = await mkdtemp(join(tmpdir(), "pr-lens-native-"));
+  expect(await run(["diagram", file, "--scenario", scenario, "--out", out], { out: () => {}, err: () => {} }, {})).toBe(0);
+  expect((await readdir(out)).filter((item) => item.endsWith(".svg"))).toHaveLength(1);
+  expect(await readFile(join(out, "diagram-render.json"), "utf8")).toContain('"animated": true');
+});

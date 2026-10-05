@@ -1,0 +1,115 @@
+{
+  "schemaVersion": "0.3.0",
+  "kind": "diagram",
+  "title": "Normalize order customers",
+  "summary": "Schema migration: customer relation replaces duplicated email.",
+  "diagram": {
+    "kind": "entity-relationship",
+    "entities": [
+      {
+        "id": "customers",
+        "label": "Customers",
+        "fields": [
+          {
+            "id": "customer-id",
+            "label": "id",
+            "type": "uuid",
+            "keys": [
+              "PK"
+            ]
+          },
+          {
+            "id": "email",
+            "label": "email",
+            "type": "varchar(255)"
+          }
+        ]
+      },
+      {
+        "id": "orders",
+        "label": "Orders",
+        "fields": [
+          {
+            "id": "order-id",
+            "label": "id",
+            "type": "int64",
+            "keys": [
+              "PK"
+            ],
+            "delta": "modified",
+            "previous": {
+              "type": "int32"
+            }
+          },
+          {
+            "id": "customer-fk",
+            "label": "customer_id",
+            "type": "uuid",
+            "keys": [
+              "FK"
+            ],
+            "delta": "added"
+          },
+          {
+            "id": "old-email",
+            "label": "customer_email",
+            "type": "varchar(255)",
+            "delta": "removed"
+          },
+          {
+            "id": "status",
+            "label": "status",
+            "type": "OrderStatus",
+            "delta": "added"
+          }
+        ]
+      }
+    ],
+    "relations": [
+      {
+        "id": "customer-orders",
+        "from": {
+          "entity": "customers",
+          "field": "customer-id",
+          "cardinality": "one"
+        },
+        "to": {
+          "entity": "orders",
+          "field": "customer-fk",
+          "cardinality": "zero-or-many"
+        },
+        "label": "places",
+        "delta": "added"
+      }
+    ],
+    "scenarios": [
+      {
+        "id": "migration",
+        "label": "Introduce customer identity and remove duplication",
+        "steps": [
+          {
+            "elements": [
+              "order-id"
+            ]
+          },
+          {
+            "elements": [
+              "customer-fk",
+              "customer-orders"
+            ]
+          },
+          {
+            "elements": [
+              "old-email"
+            ]
+          },
+          {
+            "elements": [
+              "status"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

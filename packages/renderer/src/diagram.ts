@@ -4,6 +4,7 @@ import type { Box } from "./geometry.js";
 import { paletteFor } from "./theme.js";
 import { svgDocument } from "./svg/document.js";
 import { diagramText } from "./svg/diagram-primitives.js";
+import { paintEntityRelationship } from "./svg/entity-relationship.js";
 import { paintSequence } from "./svg/sequence.js";
 import { paintFlowchart } from "./svg/flowchart.js";
 
@@ -28,6 +29,7 @@ export const renderDiagram = (doc: DiagramDoc, options: DiagramRenderOptions): D
     switch (doc.diagram.kind) {
       case "flowchart": return paintFlowchart(doc.diagram, palette, doc.diagram.scenarios.find((item) => item.id === scenario?.id)?.path);
       case "sequence": return paintSequence(doc.diagram, palette, doc.diagram.scenarios.find((item) => item.id === scenario?.id));
+      case "entity-relationship": return paintEntityRelationship(doc.diagram, palette, doc.diagram.scenarios.find((item) => item.id === scenario?.id));
       default: return assertNever(doc.diagram);
     }
   })();
