@@ -12,3 +12,16 @@ it("keeps retry geometry while changing playback", () => {
   expect(renderDiagram(doc, { theme: "light", playback: { kind: "scenario", scenario: "fast-success" } }).svg).toBe(fast.svg);
   expect(renderDiagram(doc, { theme: "light" }).svg).not.toContain("<animateMotion");
 });
+
+it("focuses only visited nested branches and shares geometry with rejection", () => {
+  const doc = parseDiagramDoc(JSON.parse(readFileSync(new URL("../../../docs/experiments/sequence/checkout.diagram.json", import.meta.url), "utf8")));
+  const checkout = renderDiagram(doc, { theme: "light", playback: { kind: "scenario", scenario: "checkout-retry" } });
+  const denied = renderDiagram(doc, { theme: "dark", playback: { kind: "scenario", scenario: "unauthorized" } });
+  expect(checkout.atlas).toEqual(denied.atlas);
+  expect(checkout.svg).toContain('data-focus="inventory-branch"');
+  expect(checkout.svg).toContain('data-focus="pricing-branch"');
+  expect(checkout.svg).not.toContain('data-focus="denied"');
+  expect(denied.svg).toContain('data-focus="denied"');
+  expect(denied.svg).not.toContain('data-focus="inventory-branch"');
+  expect(denied.svg.match(/<animateMotion/g)).toHaveLength(3);
+});
