@@ -1,3 +1,4 @@
+import { paintActivation, paintLaneSurface, paintLifeline } from "./components.js";
 import { assertNever } from "@coldtea/pr-lens-schema";
 import type { Flow, FlowMessage, GraphNode, MessageKind } from "@coldtea/pr-lens-schema";
 import { measure } from "../text.js";
@@ -5,7 +6,7 @@ import { coord } from "../geometry.js";
 import type { Box } from "../geometry.js";
 import type { Palette } from "../theme.js";
 import { lines, tag, wrap } from "./primitives.js";
-import { PULSE_RADIUS, TRAIN_RADIUS } from "./pulse.js";
+import { paintPulse, PULSE_RADIUS, TRAIN_RADIUS } from "./pulse.js";
 import { messageAttributes, stylesFor } from "./styles.js";
 import { paintCard, paintLabelPill } from "./architecture.js";
 import { atlasBoxes, emptyAtlas, type RenderAtlas } from "../atlas.js";
@@ -17,7 +18,6 @@ import {
   FLOW_MAX_PULSES_PER_MESSAGE,
   FLOW_PULSE_RAMP,
   FLOW_STEP_TRAVEL,
-  LANE_RADIUS,
   PILL_HEIGHT,
   PILL_PADDING_X,
   PILL_TEXT_SIZE,
@@ -197,9 +197,8 @@ const pulsesFor = (
       const start = (placed.slot.start + index) * width;
       const finish = start + width;
 
-      return wrap(
-        "circle",
-        { r: radius, fill: colour, opacity: 0 },
+      return paintPulse(
+        colour,
         tag("animateMotion", {
           dur: duration,
           repeatCount: "indefinite",
@@ -216,7 +215,7 @@ const pulsesFor = (
             keyTimes:
               `0;${ratio(start)};${ratio(start + ramp)};` +
               `${ratio(finish - ramp)};${ratio(finish)};1`,
-          }),
+          }), { r: radius, opacity: 0 },
       );
     }),
   );
@@ -291,38 +290,13 @@ const paintFlow = (
 
   const bands = layout.participants.map((participant) => {
     const box = bandBox(participant.centreX, columnWidth, layout);
-    return tag("rect", {
-      class: "lanebox",
-      x: coord(box.x),
-      y: coord(box.y),
-      width: coord(box.width),
-      height: coord(box.height),
-      rx: LANE_RADIUS,
-      ...styles.lane,
-    });
+    return paintLaneSurface(box, palette, { class: "lanebox" });
   });
 
   const columns = layout.participants.map((participant) =>
     lines([
-      tag("line", {
-        class: "lifeline",
-        x1: coord(participant.centreX),
-        y1: coord(layout.lifelineTop),
-        x2: coord(participant.centreX),
-        y2: coord(lifelineBottom),
-        ...styles.lifeline,
-      }),
-      ...participant.activations.map((bar) =>
-        tag("rect", {
-          class: "actbar",
-          x: coord(participant.centreX - ACTIVATION_HALF_WIDTH),
-          y: coord(bar.top),
-          width: ACTIVATION_HALF_WIDTH * 2,
-          height: coord(bar.bottom - bar.top),
-          rx: 4,
-          ...styles.activation,
-        }),
-      ),
+      paintLifeline(participant.centreX, layout.lifelineTop, lifelineBottom, palette, { class: "lifeline" }),
+      ...participant.activations.map((bar) => paintActivation({ x: participant.centreX - ACTIVATION_HALF_WIDTH, y: bar.top, width: ACTIVATION_HALF_WIDTH * 2, height: bar.bottom - bar.top }, palette, "added", { class: "actbar" })),
     ]),
   );
 

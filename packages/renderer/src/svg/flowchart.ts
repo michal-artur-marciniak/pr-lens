@@ -1,12 +1,13 @@
+import { paintCardGroup, paintCardSurface, paintLaneSurface, paintText } from "./components.js";
 import { assertNever, type FlowchartDiagram } from "@coldtea/pr-lens-schema";
 import type { Box } from "../geometry.js";
-import { CARD_HEIGHT, CARD_RADIUS, ROW_GAP } from "../design.js";
-import { cardAttributes, cardGroupAttributes, stylesFor } from "./styles.js";
+import { CARD_HEIGHT, ROW_GAP } from "../design.js";
+import { cardAttributes, connectionAttributes } from "./styles.js";
 import { measure } from "../text.js";
 import type { Palette } from "../theme.js";
 import { diagramColour, diagramDelta, diagramLabel, diagramText, roundedDiagramRoute, timedPulse } from "./diagram-primitives.js";
 import { markerFor, toneFor } from "./document.js";
-import { escapeXml, tag, wrap } from "./primitives.js";
+import { tag, wrap } from "./primitives.js";
 
 export const paintFlowchart = (diagram: FlowchartDiagram, palette: Palette, path: readonly string[] | undefined) => {
   const ranks = new Map<string, number>();
@@ -60,7 +61,7 @@ export const paintFlowchart = (diagram: FlowchartDiagram, palette: Palette, path
     const y = Math.min(...boxes.map((box) => box.y)) - 32;
     const box = { x, y, width: Math.max(...boxes.map((box) => box.x + box.width)) - x + 18, height: Math.max(...boxes.map((box) => box.y + box.height)) - y + 18 };
     elements[group.id] = box;
-    bodies.push(tag("rect", { ...box, rx: 12, fill: palette.lane }) + wrap("text", { x: x + 14, y: y + 17, ...stylesFor(palette).laneLabel }, escapeXml(group.label)));
+    bodies.push(paintLaneSurface(box, palette) + paintText({ x: x + 14, y: y + 17 }, group.label, "laneLabel", palette));
   }
   for (const [index, edge] of diagram.edges.entries()) {
     const from = elements[edge.from];
@@ -78,7 +79,7 @@ export const paintFlowchart = (diagram: FlowchartDiagram, palette: Palette, path
         : `M${sx},${sy} L${sx + 22},${sy} L${sx + 22},${corridor} L${tx - 20},${corridor} L${tx - 20},${ty} L${tx},${ty}`
       : down ? `M${sx},${sy} L${sx},${middle} L${tx},${middle} L${tx},${ty}` : `M${sx},${sy} L${middle},${sy} L${middle},${ty} L${tx},${ty}`);
     elements[edge.id] = { x: Math.min(sx, tx, back && down ? corridor : sx), y: Math.min(sy, ty, back && !down ? corridor : sy), width: Math.max(sx, tx) - Math.min(sx, tx, back && down ? corridor : sx) + (back && !down ? 22 : 4), height: Math.max(sy, ty) - Math.min(sy, ty, back && !down ? corridor : sy) + (back && down ? 22 : 4) };
-    bodies.push(wrap("g", { "data-element": edge.id }, tag("path", { d: route, fill: "none", stroke: edge.delta === "unchanged" ? palette.edge : diagramColour(edge.delta, palette), "stroke-width": 1.5, "marker-end": markerFor(toneFor(edge.delta)), "stroke-dasharray": edge.delta === "removed" ? "5 4" : undefined }) +
+    bodies.push(wrap("g", { "data-element": edge.id }, tag("path", { d: route, ...connectionAttributes(edge.delta, palette), "marker-end": markerFor(toneFor(edge.delta)) }) +
       (edge.label === undefined ? "" : diagramLabel(edge.label, down ? (back ? corridor + 20 : (sx + tx) / 2) : (back ? (sx + tx) / 2 : middle), down ? middle - 6 : (back ? corridor - 6 : (sy + ty) / 2 - 6), palette))));
     if (path !== undefined) path.forEach((id, step) => {
       if (id === edge.id) bodies.push(timedPulse(route, step, 1, path.length + 1, edge.delta === "unchanged" ? palette.edge : diagramColour(edge.delta, palette)));
@@ -91,12 +92,12 @@ export const paintFlowchart = (diagram: FlowchartDiagram, palette: Palette, path
     let shape: string;
     switch (node.kind) {
       case "start": case "end": shape = tag("rect", { ...box, ...attrs, rx: height / 2 }); break;
-      case "process": shape = tag("rect", { ...box, ...attrs, rx: CARD_RADIUS }); break;
+      case "process": shape = paintCardSurface(box, node.delta, palette); break;
       case "decision": shape = tag("path", { d: `M${box.x + box.width / 2},${box.y} L${box.x + box.width},${box.y + box.height / 2} L${box.x + box.width / 2},${box.y + box.height} L${box.x},${box.y + box.height / 2} Z`, ...attrs }); break;
       case "datastore": shape = tag("rect", { ...box, ...attrs, rx: 12 }) + tag("ellipse", { cx: box.x + box.width / 2, cy: box.y + 12, rx: box.width / 2, ry: 12, ...attrs }); break;
       default: return assertNever(node.kind);
     }
-    bodies.push(wrap("g", { "data-element": node.id, ...cardGroupAttributes(node.delta, palette) }, shape + diagramText(node.label, box.x + box.width / 2, box.y + box.height / 2 + 5, palette) + diagramDelta(node.delta, box, palette)));
+    bodies.push(paintCardGroup(node.delta, palette, shape + diagramText(node.label, box.x + box.width / 2, box.y + box.height / 2 + 5, palette) + diagramDelta(node.delta, box, palette), { "data-element": node.id }));
   }
   return { width: canvasWidth, height: canvasHeight, body: bodies.join(""), atlas: { elements } };
 };

@@ -32,3 +32,7 @@ The parser rejects duplicate ids, missing references and disconnected scenario p
 SVGs are self-contained, use CSS/SMIL and render as images. Reduced-motion readers get the full static structure. No Mermaid syntax, parser or renderer is involved. Existing architecture/data-flow documents keep their original commands and contract.
 
 The experimental layout supports one level of groups and up to 64 nodes. Large diagrams should be split into smaller explanations. Group boxes cover their members; deeply interleaved groups and dense graphs are outside this first layout's scope. Horizontal drawings need more width than the vertical cache example. The local command does not publish to the hosted canvas or infer diagrams from a diff.
+
+## Shared appearance
+
+Architecture graphs, data-flow graphs and native diagrams use `svg/components.ts` for card surfaces, card groups, badges, label pills, text roles, lanes, lifelines and activations. Their appearance comes from `svg/styles.ts` and dimensions from `design.ts`. Pulse appearance is shared through `svg/pulse.ts`; each diagram keeps its own playback clock. Native shapes such as decisions and datastores retain their geometry while using the same card styles. Delta badges use the same NEW, CHANGED and REMOVED labels as architecture graphs.
