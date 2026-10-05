@@ -9,7 +9,7 @@ import { paintFlowchart } from "./svg/flowchart.js";
 
 export type DiagramPlayback = { kind: "static" } | { kind: "scenario"; scenario: string };
 export type DiagramRenderOptions = { theme: Theme; playback?: DiagramPlayback };
-export type DiagramPicture = { svg: string; width: number; height: number; animated: boolean; atlas: { elements: Record<string, Box> } };
+export type DiagramPicture = { svg: string; width: number; height: number; animated: boolean; atlas: { elements: Record<string, Box>; occurrences?: Record<string, Box> } };
 
 export class DiagramRenderError extends Error {
   constructor(readonly code: "UNKNOWN_SCENARIO", message: string) {
