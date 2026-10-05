@@ -10,7 +10,7 @@ import type { ScopedGraph } from "../scope.js";
 import { canvasFor, union } from "../bounds.js";
 import { coord, type Box } from "../geometry.js";
 import { relieveCongestion } from "../layout/congestion.js";
-import { lines, tag, textNode, wrap } from "./primitives.js";
+import { lines, tag, wrap } from "./primitives.js";
 import { curveBounds, type RoutedEdge } from "../layout/edges.js";
 import { atlasBoxes, emptyAtlas, type RenderAtlas } from "../atlas.js";
 import { markerFor, shifted, toneColour, toneFor, type Tone } from "./document.js";
@@ -201,7 +201,6 @@ export const paintArchitecture = (
   palette: Palette,
 ): ArchitecturePainting => {
   const { layout, routed, pills } = relieveCongestion(graph, hints);
-  const styles = stylesFor(palette);
   const drawn: Box[] = occupiedBoxes(layout.nodes);
 
   const edgeMarkup: string[] = [];
