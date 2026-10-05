@@ -6,7 +6,7 @@ import type { Tone } from "./document.js";
 import { badgeColours, cardAttributes, cardGroupAttributes, stylesFor } from "./styles.js";
 import { tag, textNode, wrap, type Attributes } from "./primitives.js";
 
-export type TextRole = "title" | "subtitle" | "caption" | "heading" | "laneLabel";
+export type TextRole = "title" | "subtitle" | "caption" | "activeCaption" | "heading" | "laneLabel";
 
 export const paintText = (attributes: Attributes, text: string, role: TextRole, palette: Palette, decoration: Attributes = {}): string =>
   textNode({ ...attributes, ...stylesFor(palette)[role], ...decoration }, text);

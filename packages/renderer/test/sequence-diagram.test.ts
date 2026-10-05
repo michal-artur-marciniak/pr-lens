@@ -18,6 +18,11 @@ it("focuses only visited nested branches and shares geometry with rejection", ()
   const checkout = renderDiagram(doc, { theme: "light", playback: { kind: "scenario", scenario: "checkout-retry" } });
   const denied = renderDiagram(doc, { theme: "dark", playback: { kind: "scenario", scenario: "unauthorized" } });
   expect(checkout.atlas).toEqual(denied.atlas);
+  expect(checkout.svg).not.toMatch(/data-focus="[^"]+"[^>]*><rect/);
+  expect(checkout.svg).not.toContain('data-focus="authorized"');
+  expect(checkout.svg).toContain("attempt 1/2");
+  expect(checkout.svg).toContain("attempt 2/2");
+  expect(denied.svg).not.toContain("attempt 1/2");
   expect(checkout.svg).toContain('data-focus="inventory-branch"');
   expect(checkout.svg).toContain('data-focus="pricing-branch"');
   expect(checkout.svg).not.toContain('data-focus="denied"');

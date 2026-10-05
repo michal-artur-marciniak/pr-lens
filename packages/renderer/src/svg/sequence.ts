@@ -1,11 +1,12 @@
 import { assertNever, compileSequence, type SequenceDiagram, type SequenceScenario, type SequenceStep } from "@coldtea/pr-lens-schema";
 import type { Box } from "../geometry.js";
-import { messageAttributes, stylesFor } from "./styles.js";
-import { paintActivation, paintCardGroup, paintCardSurface, paintLaneSurface, paintLifeline } from "./components.js";
+import { messageAttributes } from "./styles.js";
+import { paintActivation, paintCardGroup, paintCardSurface, paintLaneSurface, paintLifeline, paintText } from "./components.js";
 import { measure } from "../text.js";
 import type { Palette } from "../theme.js";
 import { diagramDelta, diagramLabel, diagramText, timedPulse, timedFocus, timedRouteHighlight } from "./diagram-primitives.js";
 import { markerFor, openMarkerFor, toneFor } from "./document.js";
+import { PULSE_RADIUS } from "./pulse.js";
 import { tag, wrap } from "./primitives.js";
 
 export const paintSequence = (diagram: SequenceDiagram, palette: Palette, scenario: SequenceScenario | undefined) => {
@@ -16,6 +17,8 @@ export const paintSequence = (diagram: SequenceDiagram, palette: Palette, scenar
   const elements: Record<string, Box> = {};
   const centres = new Map<string, number>();
   const rows = new Map<string, number>();
+  const branchLabels = new Map<string, { label: string; x: number; y: number; parallel: boolean }>();
+  const repeatLabels = new Map<string, { x: number; y: number }>();
   const ancestors = new Map<string, string[]>();
   const frames: string[] = [];
   const headers: string[] = [];
@@ -41,7 +44,9 @@ export const paintSequence = (diagram: SequenceDiagram, palette: Palette, scenar
         case "choice": case "parallel":
           y += 32;
           for (const branch of step.branches) {
-            frames.push(diagramText(branch.label, 35 + depth * 10, y + 14, palette, "caption", "start"));
+            const branchX = 44 + depth * 10;
+            branchLabels.set(branch.id, { label: branch.label, x: branchX, y: y + 14, parallel: step.kind === "parallel" });
+            frames.push(diagramText(branch.label, branchX, y + 14, palette, "caption", "start"));
             const branchTop = y;
             y = layout(branch.steps, y + 22, depth + 1, [...parents, step.id, branch.id]);
             elements[branch.id] = { x: 30 + depth * 10, y: branchTop, width: width - 60 - depth * 20, height: y - branchTop };
@@ -54,6 +59,7 @@ export const paintSequence = (diagram: SequenceDiagram, palette: Palette, scenar
       if (step.kind !== "message") {
         const box = { x: 20 + depth * 10, y: start, width: width - 40 - depth * 20, height: y - start };
         elements[step.id] = box;
+        if (step.kind === "repeat") repeatLabels.set(step.id, { x: box.x + 8 + measure(`repeat: ${step.label}`, "sans", 11) + 18, y: box.y + 20 });
         frames.unshift(paintLaneSurface(box, palette, { stroke: palette.cardBorder }) + diagramText(`${step.kind}: ${step.label}`, box.x + 8, box.y + 20, palette, "caption", "start"));
       }
     }
@@ -92,15 +98,27 @@ export const paintSequence = (diagram: SequenceDiagram, palette: Palette, scenar
     }
   }
   const focus: string[] = [];
-  for (const [id, box] of Object.entries(elements)) {
-    const intervals = (timeline?.events ?? []).filter((event) => ancestors.get(event.message)?.includes(id)).map((event) => ({ start: event.start, end: event.start + event.duration })).sort((a, b) => a.start - b.start);
+  const activeBranches = (message: string): Set<string> => {
+    const branches = (ancestors.get(message) ?? []).filter((id) => branchLabels.has(id));
+    const closest = branches.at(-1);
+    const parallel = branches.filter((id) => branchLabels.get(id)?.parallel).at(-1);
+    return new Set([closest, parallel].filter((id): id is string => id !== undefined));
+  };
+  for (const [id, label] of branchLabels) {
+    const intervals = (timeline?.events ?? []).filter((event) => activeBranches(event.message).has(id)).map((event) => ({ start: event.start, end: event.start + event.duration })).sort((a, b) => a.start - b.start);
     const merged: { start: number; end: number }[] = [];
     for (const interval of intervals) {
       const previous = merged.at(-1);
       if (previous !== undefined && interval.start <= previous.end) previous.end = Math.max(previous.end, interval.end);
       else merged.push({ ...interval });
     }
-    for (const interval of merged) focus.push(timedFocus(tag("rect", { ...box, rx: 12, ...stylesFor(palette).focus }), interval.start, interval.end - interval.start, (timeline?.duration ?? 0) + 1, id));
+    const body = tag("circle", { cx: label.x - 9, cy: label.y - 4, r: PULSE_RADIUS, fill: palette.selection }) + paintText({ x: label.x, y: label.y, "text-anchor": "start" }, label.label, "activeCaption", palette);
+    for (const interval of merged) focus.push(timedFocus(body, interval.start, interval.end - interval.start, (timeline?.duration ?? 0) + 1, id));
+  }
+  for (const visit of timeline?.repeats ?? []) {
+    const label = repeatLabels.get(visit.id);
+    if (label === undefined) continue;
+    focus.push(timedFocus(paintText({ ...label, "text-anchor": "start" }, `attempt ${visit.iteration}/${visit.total}`, "activeCaption", palette), visit.start, visit.duration, (timeline?.duration ?? 0) + 1, `${visit.id}:attempt-${visit.iteration}`));
   }
   return { width, height, body: [...frames, ...lines, ...headers, ...arrows, ...focus].join(""), atlas: { elements } };
 };

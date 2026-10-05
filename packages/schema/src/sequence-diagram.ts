@@ -35,11 +35,13 @@ export const SequenceDiagram = z.strictObject({
 });
 export type SequenceDiagram = z.infer<typeof SequenceDiagram>;
 export type SequenceEvent = { message: string; start: number; duration: number };
-export type SequenceTimeline = { events: SequenceEvent[]; duration: number; issues: SchemaIssue[] };
+export type SequenceRepeatVisit = { id: string; start: number; duration: number; iteration: number; total: number };
+export type SequenceTimeline = { events: SequenceEvent[]; repeats: SequenceRepeatVisit[]; duration: number; issues: SchemaIssue[] };
 export const MAX_SEQUENCE_VISITS = 256;
 
 export const compileSequence = (diagram: SequenceDiagram, scenario: SequenceScenario): SequenceTimeline => {
   const events: SequenceEvent[] = [];
+  const repeats: SequenceRepeatVisit[] = [];
   const issues: SchemaIssue[] = [];
   const choices = new Map<string, number>();
   const iterations = new Map<string, number>();
@@ -65,7 +67,11 @@ export const compileSequence = (diagram: SequenceDiagram, scenario: SequenceScen
           iterations.set(step.id, visit + 1);
           const count = scenario.iterations[step.id]?.[visit];
           if (count === undefined) failure(step.id, "each repeat visit needs an iteration count");
-          else for (let i = 0; i < count && visits <= MAX_SEQUENCE_VISITS; i++) time = walk(step.steps, time);
+          else for (let i = 0; i < count && visits <= MAX_SEQUENCE_VISITS; i++) {
+            const start = time;
+            time = walk(step.steps, time);
+            repeats.push({ id: step.id, start, duration: time - start, iteration: i + 1, total: count });
+          }
           break;
         }
         case "parallel": time = Math.max(...step.branches.map((branch) => walk(branch.steps, time))); break;
@@ -79,7 +85,7 @@ export const compileSequence = (diagram: SequenceDiagram, scenario: SequenceScen
     if ((choices.get(id) ?? 0) !== values.length) failure(id, "choice values must match the visits in this scenario");
   for (const [id, values] of Object.entries(scenario.iterations))
     if ((iterations.get(id) ?? 0) !== values.length) failure(id, "iteration values must match the visits in this scenario");
-  return { events, duration, issues };
+  return { events, repeats, duration, issues };
 };
 
 export const sequenceIssues = (diagram: SequenceDiagram): SchemaIssue[] => {
