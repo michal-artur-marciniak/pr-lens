@@ -1,15 +1,16 @@
-import { assertNever, compileSequence, type SequenceDiagram, type SequenceScenario, type SequenceStep } from "@coldtea/pr-lens-schema";
+import { paintSequenceScenario } from "./sequence-scenario.js";
+import { assertNever, type SequenceDiagram, type SequenceScenario, type SequenceStep } from "@coldtea/pr-lens-schema";
 import type { Box } from "../geometry.js";
 import { messageAttributes } from "./styles.js";
-import { paintActivation, paintCardGroup, paintCardSurface, paintLaneSurface, paintLifeline, paintText } from "./components.js";
+import { paintActivation, paintCardGroup, paintCardSurface, paintLaneSurface, paintLifeline } from "./components.js";
 import { measure } from "../text.js";
 import type { Palette } from "../theme.js";
-import { diagramDelta, diagramLabel, diagramText, timedPulse, timedFocus, timedRouteHighlight } from "./diagram-primitives.js";
+import { diagramDelta, diagramLabel, diagramText } from "./diagram-primitives.js";
 import { markerFor, openMarkerFor, toneFor } from "./document.js";
-import { PULSE_RADIUS } from "./pulse.js";
 import { tag, wrap } from "./primitives.js";
 
 export const paintSequence = (diagram: SequenceDiagram, palette: Palette, scenario: SequenceScenario | undefined) => {
+  if (scenario !== undefined) return paintSequenceScenario(diagram, palette, scenario);
   const labelColumn = Math.max(0, ...diagram.messages.filter((message) => message.kind !== "self").map((message) => (measure(message.label, "sans-bold", 9.5) + 40) / Math.max(1, Math.abs(diagram.participants.findIndex((participant) => participant.id === message.from) - diagram.participants.findIndex((participant) => participant.id === message.to)))));
   const column = Math.max(190, labelColumn, ...diagram.participants.map((participant) => Math.ceil(measure(participant.label, "sans", 13) + 64)));
   const selfWidth = Math.max(0, ...diagram.messages.filter((message) => message.kind === "self").map((message) => measure(message.label, "sans-bold", 9.5) + 20));
@@ -17,9 +18,6 @@ export const paintSequence = (diagram: SequenceDiagram, palette: Palette, scenar
   const elements: Record<string, Box> = {};
   const centres = new Map<string, number>();
   const rows = new Map<string, number>();
-  const branchLabels = new Map<string, { label: string; x: number; y: number; parallel: boolean }>();
-  const repeatLabels = new Map<string, { x: number; y: number }>();
-  const ancestors = new Map<string, string[]>();
   const frames: string[] = [];
   const headers: string[] = [];
   diagram.participants.forEach((participant, i) => {
@@ -35,7 +33,6 @@ export const paintSequence = (diagram: SequenceDiagram, palette: Palette, scenar
       const start = y;
       switch (step.kind) {
         case "message":
-          ancestors.set(step.message, parents);
           rows.set(step.message, y + 24);
           elements[step.id] = { x: 30, y, width: width - 60, height: 52 };
           y += 52;
@@ -45,7 +42,6 @@ export const paintSequence = (diagram: SequenceDiagram, palette: Palette, scenar
           y += 32;
           for (const branch of step.branches) {
             const branchX = 44 + depth * 10;
-            branchLabels.set(branch.id, { label: branch.label, x: branchX, y: y + 14, parallel: step.kind === "parallel" });
             frames.push(diagramText(branch.label, branchX, y + 14, palette, "caption", "start"));
             const branchTop = y;
             y = layout(branch.steps, y + 22, depth + 1, [...parents, step.id, branch.id]);
@@ -59,7 +55,6 @@ export const paintSequence = (diagram: SequenceDiagram, palette: Palette, scenar
       if (step.kind !== "message") {
         const box = { x: 20 + depth * 10, y: start, width: width - 40 - depth * 20, height: y - start };
         elements[step.id] = box;
-        if (step.kind === "repeat") repeatLabels.set(step.id, { x: box.x + 8 + measure(`repeat: ${step.label}`, "sans", 11) + 18, y: box.y + 20 });
         frames.unshift(paintLaneSurface(box, palette, { stroke: palette.cardBorder }) + diagramText(`${step.kind}: ${step.label}`, box.x + 8, box.y + 20, palette, "caption", "start"));
       }
     }
@@ -70,7 +65,6 @@ export const paintSequence = (diagram: SequenceDiagram, palette: Palette, scenar
     const centre = centres.get(participant.id);
     return centre === undefined ? "" : paintLifeline(centre, 118, height - 22, palette);
   });
-  const timeline = scenario === undefined ? undefined : compileSequence(diagram, scenario);
   const arrows: string[] = [];
   for (const message of diagram.messages) {
     const x1 = centres.get(message.from);
@@ -91,34 +85,6 @@ export const paintSequence = (diagram: SequenceDiagram, palette: Palette, scenar
     const returnY = matchingReturn === undefined ? undefined : rows.get(matchingReturn.id);
     if (message.kind === "sync" && returnY !== undefined) arrows.push(paintActivation({ x: x2 - 4, y, width: 8, height: returnY - y }, palette, "neutral"));
     arrows.push(wrap("g", { "data-element": message.id }, tag("path", { d: path, ...messageAttributes(message, palette), "marker-end": marker }) + diagramLabel(message.label, self ? x1 + 45 + measure(message.label, "sans-bold", 9.5) / 2 : (x1 + x2) / 2, y - 8, palette)));
-    for (const event of timeline?.events ?? []) if (event.message === message.id) {
-      const cycle = (timeline?.duration ?? 0) + 1;
-      arrows.push(timedRouteHighlight(path, event.start, event.start + event.duration, cycle, message.delta, palette));
-      arrows.push(timedPulse(path, event.start, event.duration, cycle, palette.selection));
-    }
   }
-  const focus: string[] = [];
-  const activeBranches = (message: string): Set<string> => {
-    const branches = (ancestors.get(message) ?? []).filter((id) => branchLabels.has(id));
-    const closest = branches.at(-1);
-    const parallel = branches.filter((id) => branchLabels.get(id)?.parallel).at(-1);
-    return new Set([closest, parallel].filter((id): id is string => id !== undefined));
-  };
-  for (const [id, label] of branchLabels) {
-    const intervals = (timeline?.events ?? []).filter((event) => activeBranches(event.message).has(id)).map((event) => ({ start: event.start, end: event.start + event.duration })).sort((a, b) => a.start - b.start);
-    const merged: { start: number; end: number }[] = [];
-    for (const interval of intervals) {
-      const previous = merged.at(-1);
-      if (previous !== undefined && interval.start <= previous.end) previous.end = Math.max(previous.end, interval.end);
-      else merged.push({ ...interval });
-    }
-    const body = tag("circle", { cx: label.x - 9, cy: label.y - 4, r: PULSE_RADIUS, fill: palette.selection }) + paintText({ x: label.x, y: label.y, "text-anchor": "start" }, label.label, "activeCaption", palette);
-    for (const interval of merged) focus.push(timedFocus(body, interval.start, interval.end - interval.start, (timeline?.duration ?? 0) + 1, id));
-  }
-  for (const visit of timeline?.repeats ?? []) {
-    const label = repeatLabels.get(visit.id);
-    if (label === undefined) continue;
-    focus.push(timedFocus(paintText({ ...label, "text-anchor": "start" }, `attempt ${visit.iteration}/${visit.total}`, "activeCaption", palette), visit.start, visit.duration, (timeline?.duration ?? 0) + 1, `${visit.id}:attempt-${visit.iteration}`));
-  }
-  return { width, height, body: [...frames, ...lines, ...headers, ...arrows, ...focus].join(""), atlas: { elements } };
+  return { width, height, body: [...frames, ...lines, ...headers, ...arrows].join(""), atlas: { elements } };
 };

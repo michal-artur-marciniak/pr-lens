@@ -44,3 +44,14 @@ it("reports each executed retry iteration on the shared clock", () => {
     { id: "attempts", start: 5, duration: 2, iteration: 3, total: 3 },
   ]);
 });
+
+it("records branch event indices without assigning concurrent work to another branch", () => {
+  const model = fixture("checkout");
+  const scenario = model.scenarios[0];
+  if (scenario === undefined) throw new Error("missing scenario");
+  const timeline = compileSequence(model, scenario);
+  expect(timeline.parallels[0]?.branches.map((branch) => ({ duration: branch.duration, events: branch.events }))).toEqual([
+    { duration: 5, events: [2, 3, 4, 5, 6] },
+    { duration: 3, events: [7, 8, 9] },
+  ]);
+});

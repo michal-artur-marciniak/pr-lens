@@ -36,12 +36,14 @@ export const SequenceDiagram = z.strictObject({
 export type SequenceDiagram = z.infer<typeof SequenceDiagram>;
 export type SequenceEvent = { message: string; start: number; duration: number };
 export type SequenceRepeatVisit = { id: string; start: number; duration: number; iteration: number; total: number };
-export type SequenceTimeline = { events: SequenceEvent[]; repeats: SequenceRepeatVisit[]; duration: number; issues: SchemaIssue[] };
+export type SequenceParallelVisit = { id: string; label: string; start: number; duration: number; branches: { id: string; label: string; duration: number; events: number[] }[] };
+export type SequenceTimeline = { parallels: SequenceParallelVisit[]; events: SequenceEvent[]; repeats: SequenceRepeatVisit[]; duration: number; issues: SchemaIssue[] };
 export const MAX_SEQUENCE_VISITS = 256;
 
 export const compileSequence = (diagram: SequenceDiagram, scenario: SequenceScenario): SequenceTimeline => {
   const events: SequenceEvent[] = [];
   const repeats: SequenceRepeatVisit[] = [];
+  const parallels: SequenceParallelVisit[] = [];
   const issues: SchemaIssue[] = [];
   const choices = new Map<string, number>();
   const iterations = new Map<string, number>();
@@ -74,7 +76,17 @@ export const compileSequence = (diagram: SequenceDiagram, scenario: SequenceScen
           }
           break;
         }
-        case "parallel": time = Math.max(...step.branches.map((branch) => walk(branch.steps, time))); break;
+        case "parallel": {
+          const start = time;
+          const branches = step.branches.map((branch) => {
+            const first = events.length;
+            const end = walk(branch.steps, start);
+            return { id: branch.id, label: branch.label, duration: end - start, events: Array.from({ length: events.length - first }, (_, i) => first + i) };
+          });
+          time = start + Math.max(...branches.map((branch) => branch.duration));
+          parallels.push({ id: step.id, label: step.label, start, duration: time - start, branches });
+          break;
+        }
         default: assertNever(step);
       }
     }
@@ -85,7 +97,7 @@ export const compileSequence = (diagram: SequenceDiagram, scenario: SequenceScen
     if ((choices.get(id) ?? 0) !== values.length) failure(id, "choice values must match the visits in this scenario");
   for (const [id, values] of Object.entries(scenario.iterations))
     if ((iterations.get(id) ?? 0) !== values.length) failure(id, "iteration values must match the visits in this scenario");
-  return { events, repeats, duration, issues };
+  return { events, repeats, parallels, duration, issues };
 };
 
 export const sequenceIssues = (diagram: SequenceDiagram): SchemaIssue[] => {
