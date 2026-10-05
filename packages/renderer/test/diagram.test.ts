@@ -10,6 +10,9 @@ describe("flowchart SVG", () => {
     const hit = renderDiagram(doc, { theme: "light", playback: { kind: "scenario", scenario: "cache-hit" } });
     const miss = renderDiagram(doc, { theme: "dark", playback: { kind: "scenario", scenario: "cache-miss" } });
     expect(hit.atlas).toEqual(miss.atlas);
+  expect(hit.svg.match(/data-route-highlight="true"/g)).toHaveLength(4);
+  expect(hit.svg).toContain('attributeName="stroke-dashoffset"');
+  expect(hit.svg).toContain('keyTimes="0;0.8;1" values="1;0;0"');
     expect(hit.atlas.elements.response?.y).toBeGreaterThan(hit.atlas.elements.store?.y ?? 0);
     expect(hit.svg.match(/<animateMotion/g)).toHaveLength(4);
     expect(miss.svg.match(/<animateMotion/g)).toHaveLength(5);
@@ -40,16 +43,19 @@ describe("flowchart SVG", () => {
   });
 });
 
-it("keeps the selected scenario path visible without animation", () => {
+it("reveals only the selected scenario path during playback", () => {
   const hit = renderDiagram(doc, { theme: "light", playback: { kind: "scenario", scenario: "cache-hit" } });
   const miss = renderDiagram(doc, { theme: "light", playback: { kind: "scenario", scenario: "cache-miss" } });
   const selected = (svg: string) => Array.from(svg.matchAll(/data-element="([^"]+)" data-selected="true"/g), (match) => match[1]);
   expect(selected(hit.svg)).toEqual(["lookup", "check-cache", "hit", "cached-response"]);
   expect(selected(miss.svg)).toEqual(["lookup", "check-cache", "miss", "write", "stored-response"]);
-  expect(hit.svg).toMatch(/data-element="hit" data-selected="true"><path[^>]*stroke="#0969da"/);
+  expect(hit.svg).toMatch(/data-element="hit" data-selected="true"><path[^>]*stroke="#8c959f"/);
   expect(hit.svg).toMatch(/data-element="miss"><path[^>]*stroke="#8c959f"/);
   expect(selected(renderDiagram(doc, { theme: "light" }).svg)).toEqual([]);
   expect(hit.atlas).toEqual(miss.atlas);
+  expect(hit.svg.match(/data-route-highlight="true"/g)).toHaveLength(4);
+  expect(hit.svg).toContain('attributeName="stroke-dashoffset"');
+  expect(hit.svg).toContain('keyTimes="0;0.8;1" values="1;0;0"');
 });
 
 it("preserves delta colour on a selected changed edge", () => {

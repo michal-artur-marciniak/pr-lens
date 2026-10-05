@@ -2,6 +2,7 @@ import type { Delta } from "@coldtea/pr-lens-schema";
 import type { Box } from "../geometry.js";
 import { BADGE_HEIGHT, PILL_HEIGHT, PILL_PADDING_X, PILL_TEXT_SIZE, TITLE_SIZE } from "../design.js";
 import { paintPulse } from "./pulse.js";
+import { stylesFor } from "./styles.js";
 import { paintBadge, paintLabelPill, paintText, type TextRole } from "./components.js";
 import { badgeWidth, deltaBadgeText } from "../layout/architecture.js";
 import { measure } from "../text.js";
@@ -60,4 +61,15 @@ export const roundedDiagramRoute = (route: string): string => {
   }
   const last = points.at(-1);
   return last === undefined ? result : `${result} L${last.x},${last.y}`;
+};
+
+export const timedRouteHighlight = (path: string, start: number, activeDuration: number, cycle: number, delta: Delta, palette: Palette): string => {
+  const begin = start / cycle;
+  const end = (start + 1) / cycle;
+  const visibility = [...new Set([0, begin, activeDuration / cycle, 1])];
+  const reveal = [...new Set([0, begin, end, 1])];
+  const animation = tag("animate", { attributeName: "stroke-dashoffset", dur: `${cycle}s`, repeatCount: "indefinite", keyTimes: reveal.join(";"), values: reveal.map((key) => key <= begin ? 1 : 0).join(";"), calcMode: "linear" });
+  const line = (halo: boolean) => wrap("path", { d: path, fill: "none", stroke: palette.selection, ...(halo ? stylesFor(palette).glow : { "stroke-width": 2.25 }), pathLength: 1, "stroke-dasharray": 1, "stroke-dashoffset": 1 }, animation);
+  return wrap("g", { class: "diagram-motion", "data-route-highlight": "true", opacity: 0 },
+    tag("animate", { attributeName: "opacity", dur: `${cycle}s`, repeatCount: "indefinite", keyTimes: visibility.join(";"), values: visibility.map((key) => key >= begin && key < activeDuration / cycle ? 1 : 0).join(";"), calcMode: "discrete" }) + line(true) + (delta === "unchanged" ? line(false) : ""));
 };
