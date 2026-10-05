@@ -2,10 +2,10 @@ import { paintCardGroup, paintCardSurface, paintLaneSurface, paintText } from ".
 import { assertNever, type FlowchartDiagram } from "@coldtea/pr-lens-schema";
 import type { Box } from "../geometry.js";
 import { CARD_HEIGHT, ROW_GAP } from "../design.js";
-import { cardAttributes, scenarioConnectionAttributes, stylesFor } from "./styles.js";
+import { cardAttributes, connectionAttributes } from "./styles.js";
 import { measure } from "../text.js";
 import type { Palette } from "../theme.js";
-import { diagramDelta, diagramLabel, diagramText, roundedDiagramRoute, timedPulse } from "./diagram-primitives.js";
+import { diagramDelta, diagramLabel, diagramText, roundedDiagramRoute, timedPulse, timedRouteHighlight } from "./diagram-primitives.js";
 import { markerFor, toneFor } from "./document.js";
 import { tag, wrap } from "./primitives.js";
 
@@ -51,7 +51,7 @@ export const paintFlowchart = (diagram: FlowchartDiagram, palette: Palette, path
       : { x: 50 + rank * (width + 100), y: 70 + (widest - layer.length) * (height + 80) / 2 + column * (height + 80), width, height };
   }));
   const selectedEdges = new Set(path ?? []);
-  const bodies: string[] = path === undefined ? [] : [wrap("defs", {}, wrap("marker", { id: "mk-scenario", viewBox: "0 0 10 10", refX: 10, refY: 5, markerWidth: 6.5, markerHeight: 6.5, orient: "auto-start-reverse" }, tag("path", { d: "M0,0 L10,5 L0,10 Z", fill: palette.selection })))];
+  const bodies: string[] = [];
   for (const group of diagram.groups) {
     const boxes = diagram.nodes.filter((node) => node.group === group.id).flatMap((node) => {
       const box = elements[node.id];
@@ -82,8 +82,8 @@ export const paintFlowchart = (diagram: FlowchartDiagram, palette: Palette, path
     elements[edge.id] = { x: Math.min(sx, tx, back && down ? corridor : sx), y: Math.min(sy, ty, back && !down ? corridor : sy), width: Math.max(sx, tx) - Math.min(sx, tx, back && down ? corridor : sx) + (back && !down ? 22 : 4), height: Math.max(sy, ty) - Math.min(sy, ty, back && !down ? corridor : sy) + (back && down ? 22 : 4) };
     const selected = selectedEdges.has(edge.id);
     bodies.push(wrap("g", { "data-element": edge.id, "data-selected": selected ? "true" : undefined },
-      tag("path", { d: route, ...scenarioConnectionAttributes(edge.delta, palette, selected), "marker-end": selected && edge.delta === "unchanged" ? "url(#mk-scenario)" : markerFor(toneFor(edge.delta)) }) +
-      (selected ? tag("path", { d: route, stroke: palette.selection, ...stylesFor(palette).glow, "pointer-events": "none" }) : "") +
+      tag("path", { d: route, ...connectionAttributes(edge.delta, palette), "marker-end": markerFor(toneFor(edge.delta)) }) +
+      (selected && path !== undefined ? timedRouteHighlight(route, path.indexOf(edge.id), path.length, path.length + 1, edge.delta, palette) : "") +
       (edge.label === undefined ? "" : diagramLabel(edge.label, down ? (back ? corridor + 20 : (sx + tx) / 2) : (back ? (sx + tx) / 2 : middle), down ? middle - 6 : (back ? corridor - 6 : (sy + ty) / 2 - 6), palette))));
     if (path !== undefined) path.forEach((id, step) => {
       if (id === edge.id) bodies.push(timedPulse(route, step, 1, path.length + 1, palette.selection));
