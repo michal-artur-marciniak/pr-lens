@@ -16,13 +16,17 @@ node packages/cli/dist/bin.js diagram docs/experiments/sequence/parallel.diagram
 
 Omit `--scenario` for a static SVG. Each output is self-contained and can be embedded with `![Sequence](path.svg)`.
 
-`retry.diagram.json` keeps the same picture for a first-attempt success and a success after two timeouts. Choices are arrays because a repeated choice can have a different outcome on each visit. `parallel.diagram.json` shows concurrent account and billing calls followed by a shared response.
+`retry.diagram.json` renders either a first-attempt success or a success after two timeouts. Animated scenarios expand each executed attempt onto the timeline; their heights and message positions differ. Choices are arrays because a repeated choice can have a different outcome on each visit. `parallel.diagram.json` shows concurrent account and billing calls followed by a shared response.
 
 ## Experiment limits
 
-Up to eight participants and 64 messages; nesting is limited to eight levels and playback to 256 step visits. Each repeat visit has one to eight iterations. Message definitions occupy one structural position. Parallel branches occupy separate rows in the static picture; their pulses start together. Activation rectangles are inferred from the last subsequent reverse return message and are illustrative, rather than a full execution stack. There are no interactive controls or runtime scripts. Reduced motion hides animated pulses while retaining the full diagram.
+Up to eight participants and 64 message definitions; nesting is limited to eight levels and playback to 256 step visits. Each repeat visit has one to eight iterations. Message definitions occupy one structural position.
 
-During playback, the current branch receives a blue dot and a stronger label. A containing parallel branch keeps its indicator while a nested choice runs. Ancestor block frames retain their normal appearance. Repeat headers show the current attempt and total; parallel branches can be active together. A blue message trace exists only while that message is being delivered; the next message starts a fresh trace. Indicators fade at their interval boundaries. The neutral diagram remains readable between cycles and under reduced motion.
+Static exports retain the complete structural picture with choice, repeat and parallel frames. Selecting a scenario renders its executed trace: unused branches are omitted, retries occupy separate rows, and concurrent messages share a time band with enough vertical separation to keep their labels readable. These are logical steps, not measured durations. Parallel frames end with a join after their slowest branch. Scenario geometry depends on the selected execution.
+
+The active message label gets a subtle blue pill while a pulse and trace travel along its route. Attempt counters appear beside messages belonging to that repeat, including nested repeats; unrelated parallel calls do not inherit a counter. No branch dots or active frame borders remain. Change colours on message strokes are preserved. Reduced motion leaves the selected execution readable without moving effects. SVGs are self-contained, with no runtime scripts.
+
+The atlas maps message IDs to their first occurrence and exposes `occurrences` keyed by `event-N` and `parallel-N` for the selected execution. Static exports retain the original structural atlas.
 
 `checkout.diagram.json` combines authentication, parallel pricing and inventory calls, and a repeated choice inside the inventory branch. The `checkout-retry` scenario reserves stock on the second attempt; `unauthorized` takes only the rejection branch.
 
