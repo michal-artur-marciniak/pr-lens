@@ -1,5 +1,5 @@
 import { paintCardGroup, paintCardSurface, paintLaneSurface, paintText, paintMultilineTitle } from "./components.js";
-import { assertNever, type FlowchartDiagram } from "@coldtea/pr-lens-schema";
+import { assertNever, type DiagramNode, type FlowchartDiagram } from "@coldtea/pr-lens-schema";
 import type { Box } from "../geometry.js";
 import { CARD_HEIGHT, ROW_GAP } from "../design.js";
 import { cardAttributes, connectionAttributes } from "./styles.js";
@@ -9,7 +9,7 @@ import { diagramDelta, diagramLabel, roundedDiagramRoute, timedPulse, timedRoute
 import { markerFor, toneFor } from "./document.js";
 import { tag, wrap } from "./primitives.js";
 
-export const paintFlowchart = (diagram: FlowchartDiagram, palette: Palette, path: readonly string[] | undefined) => {
+export const paintFlowchart = (diagram: FlowchartDiagram, palette: Palette, path: readonly string[] | undefined, paintNode?: (node: DiagramNode, box: Box, labels: readonly string[]) => string) => {
   const ranks = new Map<string, number>();
   const visiting = new Set<string>();
   const visited = new Set<string>();
@@ -102,7 +102,7 @@ export const paintFlowchart = (diagram: FlowchartDiagram, palette: Palette, path
       case "datastore": shape = tag("rect", { ...box, ...attrs, rx: 12 }) + tag("ellipse", { cx: box.x + box.width / 2, cy: box.y + 12, rx: box.width / 2, ry: 12, ...attrs }); break;
       default: return assertNever(node.kind);
     }
-    bodies.push(paintCardGroup(node.delta, palette, shape + paintMultilineTitle(labels.get(node.id) ?? [node.label], box.x + box.width / 2, box.y + box.height / 2, palette) + diagramDelta(node.delta, box, palette), { "data-element": node.id }));
+    bodies.push(paintCardGroup(node.delta, palette, paintNode?.(node, box, labels.get(node.id) ?? [node.label]) ?? (shape + paintMultilineTitle(labels.get(node.id) ?? [node.label], box.x + box.width / 2, box.y + box.height / 2, palette) + diagramDelta(node.delta, box, palette)), { "data-element": node.id }));
   }
   return { width: canvasWidth, height: canvasHeight, body: bodies.join(""), atlas: { elements } };
 };
